@@ -67,7 +67,7 @@
                                         </div>
                                         <div class="portlet-body flip-scroll">
                                             <div class="row">
-                                                <form action="<?= base_url($act . '/doPengujian') ?>" method="" novalidate="" class="form-body col-sm-6">
+                                                <form action="<?= base_url($act . '/doPengujian') ?>" method="POST" class="form-body col-sm-6">
                                                     <div class="portlet-body form">
                                                         <div class="form-body">
                                                             <div class="fomr-group">
@@ -78,17 +78,77 @@
                                                             </div>
                                                         </div>
                                                     </div>
+                                                    <div class="portlet-body form">
+                                                        <div class="form-body">
+                                                            <div class="fomr-group">
+                                                                <label class="control-label col-sm-6" for="epoch">Epoch</label>
+                                                                <div class="col-sm-6">
+                                                                    <input class="form-control" type="number" min="1" name="epoch" required="" id="epoch" value="1" step="1">
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="portlet-body form">
+                                                        <div class="form-body">
+                                                            <div class="fomr-group">
+                                                                <label class="control-label col-sm-6" for="target">Target</label>
+                                                                <div class="col-sm-6">
+                                                                    <input class="form-control" type="number" min="1" name="target" required="" id="target" value="1" max="3" step="1">
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                     <?php
                                                     try {
                                                         foreach ($data_klasifikasi->result() as $klasifikasi) {
+                                                            $nama_klasifikasi = $klasifikasi->nama_klasifikasi;
+                                                            $id_klasifikasi = $klasifikasi->id_klasifikasi;
+                                                            $lower_nama_klasifikasi = strtolower($nama_klasifikasi);
                                                     ?>
                                                             <div class="portlet-body form">
                                                                 <div class="form-body">
                                                                     <div class="fomr-group">
-                                                                        <label class="control-label col-sm-6" for="klasifikasi_<?= $klasifikasi->id_klasifikasi; ?>"><?= $klasifikasi->nama_klasifikasi; ?></label>
+                                                                        <label class="control-label col-sm-6" for="klasifikasi_<?= $id_klasifikasi; ?>"><?= $nama_klasifikasi; ?></label>
                                                                         <div class="col-sm-6">
-                                                                            <input <?= ($klasifikasi->nama_klasifikasi == "PH") ? "max=\"14\" step=\"0.1\"" : ""; ?> class="form-control" type="number" min="0" name="<?=$klasifikasi->nama_klasifikasi?>" required="" id="klasifikasi_<?= $klasifikasi->id_klasifikasi; ?>" value="0">
-                                                                            <input type="hidden" name="id_klasifikasi" value="<?= $klasifikasi->id_klasifikasi; ?>">
+                                                                            <?php
+                                                                            if ($lower_nama_klasifikasi == "ph") {
+                                                                            ?>
+                                                                                <input max="14" step="0.1" class="form-control" type="number" min="0" name="<?= $lower_nama_klasifikasi ?>" required="" id="klasifikasi_<?= $id_klasifikasi; ?>" value="0">
+                                                                                <input type="hidden" name="id_klasifikasi" value="<?= $id_klasifikasi; ?>">
+                                                                            <?php
+                                                                            } elseif ($lower_nama_klasifikasi == "tds") {
+                                                                            ?>
+                                                                                <input step="1" class="form-control" type="number" min="0" name="<?= $lower_nama_klasifikasi ?>" required="" id="klasifikasi_<?= $id_klasifikasi; ?>" value="0">
+                                                                                <input type="hidden" name="id_klasifikasi" value="<?= $id_klasifikasi; ?>">
+                                                                            <?php
+                                                                            } elseif ($lower_nama_klasifikasi == "th") {
+                                                                            ?>
+                                                                                <input step="1" class="form-control" type="number" min="0" name="<?= $lower_nama_klasifikasi ?>" required="" id="klasifikasi_<?= $id_klasifikasi; ?>" value="0">
+                                                                                <input type="hidden" name="id_klasifikasi" value="<?= $id_klasifikasi; ?>">
+                                                                            <?php
+                                                                            } elseif ($lower_nama_klasifikasi == "fe") {
+                                                                            ?>
+                                                                                <input step="0.01" class="form-control" type="number" min="0" name="<?= $lower_nama_klasifikasi ?>" required="" id="klasifikasi_<?= $id_klasifikasi; ?>" value="0">
+                                                                                <input type="hidden" name="id_klasifikasi" value="<?= $id_klasifikasi; ?>">
+                                                                            <?php
+                                                                            } elseif ($lower_nama_klasifikasi == "mn") {
+                                                                            ?>
+                                                                                <input step="0.01" class="form-control" type="number" min="0" name="<?= $lower_nama_klasifikasi ?>" required="" id="klasifikasi_<?= $id_klasifikasi; ?>" value="0">
+                                                                                <input type="hidden" name="id_klasifikasi" value="<?= $id_klasifikasi; ?>">
+                                                                            <?php
+                                                                            } elseif ($lower_nama_klasifikasi == "so4") {
+                                                                            ?>
+                                                                                <input step="0.01" class="form-control" type="number" min="0" name="<?= $lower_nama_klasifikasi ?>" required="" id="klasifikasi_<?= $id_klasifikasi; ?>" value="0">
+                                                                                <input type="hidden" name="id_klasifikasi" value="<?= $id_klasifikasi; ?>">
+                                                                            <?php
+                                                                            } elseif ($lower_nama_klasifikasi == "tc") {
+                                                                            ?>
+                                                                                <input step="1" class="form-control" type="number" min="0" name="<?= $lower_nama_klasifikasi ?>" required="" id="klasifikasi_<?= $id_klasifikasi; ?>" value="0">
+                                                                                <input type="hidden" name="id_klasifikasi" value="<?= $id_klasifikasi; ?>">
+                                                                            <?php
+                                                                            }
+                                                                            ?>
+
                                                                         </div>
                                                                     </div>
                                                                 </div>
@@ -97,7 +157,7 @@
                                                         }
                                                     } catch (Exception $e) {
                                                         ?>
-                                                        <h3><?= $e ?></h3>
+                                                        <h3><?= $e->getMessage(); ?></h3>
                                                     <?php
                                                     }
 
