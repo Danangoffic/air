@@ -1,3 +1,19 @@
 {
-    "git.ignoreLimitWarning": true
+    "git.ignoreLimitWarning": true,
+    "sqltools.connections": [
+        {
+            "mysqlOptions": {
+                "authProtocol": "default"
+            },
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 3306,
+            "driver": "MySQL",
+            "name": "klasifikasi ikan",
+            "database": "klasifikasi_ikan",
+            "username": "root",
+            "password": ""
+        }
+    ],
+    "compile-hero.disable-compile-files-on-did-save-code": false
 }
