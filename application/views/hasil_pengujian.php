@@ -57,7 +57,7 @@
                                     <div class="portlet box green">
                                         <div class="portlet-title">
                                             <div class="caption">
-                                                <i class="fa fa-eyedropper"></i>Lakukan Pengujian </div>
+                                                <i class="fa fa-eyedropper"></i>Hasil Pengujian </div>
                                             <div class="tools">
                                                 <!-- <a href="javascript:;" class="collapse"> </a>
                                                 <a href="#portlet-config" data-toggle="modal" class="config"> </a>

@@ -60,134 +60,116 @@ class Pengujian extends CI_Controller
 		$new_pengujian = $this->Model_pengujian;
 		$new_latih = $this->Model_latih;
 		$new_klasifikasi = $this->klasifikasi;
-		$learningRate = $this->input->post('learningRate');
-		$epoch = intval($this->input->post("epoch"));
+		$learningRate = floatval($this->input->post('learningRate'));
+		$max_epoch = intval($this->input->post("epoch"));
+		$epoch = 0;
+		$deca = 0.1;
+		$mina = 0.001;
 		$target_input = $this->input->post("target", TRUE);
-		$limit_learning_rate = $new_pengujian->max_learning_rate;
+		$window = $this->input->post("window", TRUE);
 		// CEK LEARNING RATE LIMIT
 		var_dump($this->input->post());
 		// exit();
-		if($learningRate > $limit_learning_rate){
-			$this->session->set_flashdata("error", "Learning rate tidak bisa melewati batas " . $limit_learning_rate);
-			return redirect(base_url("Pengujian"));
-		}
-		if($epoch < 1 ){
-			$this->session->set_flashdata("error", "Epoch harus lebih besar dari 0");
-			return redirect(base_url("Pengujian"));
-		}
-		$bobot = array();
-		$data_klasifikasi = $new_klasifikasi->get_all();
-		
-		$new_data_latih = array();
-		$array_data_latih = array();
-		foreach ($data_klasifikasi->result() as $klasifikasi) {
-			$lower_nama_klasifikasi = strtolower($klasifikasi->nama_klasifikasi);
-			$bobot[$lower_nama_klasifikasi] = $this->input->post($lower_nama_klasifikasi);
-			$b = $bobot[$lower_nama_klasifikasi];
-			$array_data_latih[$lower_nama_klasifikasi] = $b;
-			if ($new_klasifikasi === "tc") {
-				$new_data_latih['tc'] = $b;
-				// $new_pengujian->set_tc($b);
-			}
-			if ($new_klasifikasi === "so4") {
-				$new_data_latih['so4'] = $b;
-				// $new_pengujian->set_so4($b);
-			}
-			if ($new_klasifikasi === "mn") {
-				$new_data_latih['mn'] = $b;
-				// $new_pengujian->set_mn($b);
-			}
-			if ($new_klasifikasi === "fe") {
-				$new_data_latih['fe'] = $b;
-				// $new_pengujian->set_fe($b);
-			}
-			if ($new_klasifikasi === "th") {
-				$new_data_latih['th'] = $b;
-				// $new_pengujian->set_th($b);
-			}
-			if ($new_klasifikasi === "tds") {
-				$new_data_latih['tds'] = $b;
-				// $new_pengujian->set_tds($b);
-			}
-			if ($new_klasifikasi === "ph") {
-				$new_data_latih['ph'] = $b;
-				// $new_pengujian->set_ph($b);
-			}
-		}
-		echo "<br>";
-		var_dump($bobot);
-		echo "<br>";
-		// echo "tc dari model : " . $new_pengujian->get_tc() . "<br>";
-		// GET TARGET BY INPUT HERE
-		
-		// $new_data_latih['target'] = $new_pengujian->set_get_target();
-		// $new_latih->set_data($new_data_latih);
-		$insert_data_latih = $this->Model_latih->insert_data($bobot);
-		if(!$insert_data_latih){
+
+		//GET INPUT VALUE
+		$PengujianValue = $this->getPengujianValue();
+		$DataPengujianUser = $PengujianValue['DataPengujianUser'];
+
+
+		$insert_data_latih = $this->Model_latih->insert_data($DataPengujianUser);
+		if (!$insert_data_latih) {
 			$this->session->set_flashdata("error", "Gagal Insert Data Latih Baru");
 			redirect(base_url('Pengujian'));
 		}
 		$id_data_latih = $this->db->insert_id();
 		// $new_pengujian->set_push_usedID($id_data_latih);
 		echo "<br> id latih : " . $id_data_latih . "<br>";
-		echo "<br> new pengujian : <br> " ; 
+		echo "<br> new pengujian : <br> ";
 		// var_dump($new_pengujian);
-		$dataInitResultWeightUji = $this->getResultInitWeightUji($bobot, $id_data_latih);
-		$target_awal = $dataInitResultWeightUji['converted_target'];
-		while ($epoch > 0) {
+
+		//TODO: INISIALISASI
+		// $dataInitResultWeightUji = $this->getResultInitWeightUji($DataPengujianUser, $id_data_latih);
+		$target_awal = $target_input;
+		$totalTrue = 0;
+		$totalFailed = 0;
+		$resultCalculation = array();
+		$BobotAwal = $this->getBobotAwalNormalized($DataPengujianUser, $id_data_latih);
+		$id_bobot = $BobotAwal['id_bobot'];
+		$DATA_UJI = $BobotAwal['x'];
+		while (($epoch < $max_epoch) || ($learningRate > $mina)) {
 			# code...
-			$result_kelas_iterasi = $this->iterasi($new_pengujian, $bobot, $id_data_latih);
+			$epoch++;
+			$result_kelas_iterasi = $this->iterasiAndEuclideanDistance($DATA_UJI, $id_bobot);
 			//PENENTUAN TARGET
-			$WINNER = $result_kelas_iterasi[0];
-			$target_winner = $WINNER['target'];
-			if($target_awal === $target_winner){
+			$WINNER1 = $result_kelas_iterasi[0];
+			$WINNER2 = $result_kelas_iterasi[1];
+			$BOBOT_WINNER1 = $WINNER1['w'];
+			$BOBOT_WINNER2 = $WINNER2['w'];
+			$target_winner = $BOBOT_WINNER1['target'];
+			$target_winner2 = $BOBOT_WINNER2['target'];
 
-			}
+			$PELATIHAN_WINNER1 = $WINNER1['x'];
+			$PELATIHAN_WINNER2 = $WINNER2['x'];
 			// KONDISI TARGET SESUAI KELAS ATAU TIDAK
-			$epoch -=0.1;
-		}
-		// for ($i=$epoch; $i == 0; $i--) { 
-		// 	$result_kelas_iterasi = $this->iterasi($new_pengujian, $bobot, $id_data_latih);
-			
-		// }
+			if ($target_awal === $target_winner) {
+				$totalTrue++;
+				$DATA_UJI = $this->targetAwalSamaDenganTargetHasil($DATA_UJI, $PELATIHAN_WINNER1, $learningRate);
+			} else {
+				$totalFailed++;
+				$DATA_UJI = $this->targetAwalTidakSamaDenganTargetHasil($result_kelas_iterasi, $window, $learningRate);
+			}
+			// PENGURANGAN LEARNING RATE
+			$learningRate = $this->getNewLearningRate($learningRate, $deca);
 
-		if (count($bobot) == 0) {
-			$this->session->set_flashdata("error", "Data Bobot Belum Diisi");
+			//CEK KONDISI UNTUK MENGEMBALIKAN HASIL PERHITUNGAN
+			if (($epoch >= $max_epoch) || ($learningRate <= $mina)) {
+				$percentOfSuccess = ($totalTrue / $totalFailed) * 100;
+				$percentOfSuccess = round($percentOfSuccess, 4);
+				$kelasTarget = $DATA_UJI[0]['w']['target'];
+				$nilaiKelas = $DATA_UJI[0]['hasil'];
+				$bobotKelas = $DATA_UJI[0]['w'];
+
+				$resultCalculation = array(
+					'learning_rate' => $learningRate,
+					'window' => $window,
+					'percentage' => $percentOfSuccess,
+					'kelas' => $kelasTarget,
+					'nilai' => $nilaiKelas,
+					'bobot' => $bobotKelas
+				);
+			}
 		}
+		$data_page = array('page' => 'hasil_pengujian', 'script' => null, 'title' => 'Hasil Pengujian', 'hasil' => $resultCalculation, 'act' => 'Pengujian');
+		$this->load->view("templates/layout", $data_page);
 	}
 
-	protected function getResultInitWeightUji(Array $dataUji, $id_taken){
-
-		$tc = $dataUji['tc'];
-		$so4 = $dataUji['so4'];
-		$mn = $dataUji['mn'];
-		$fe = $dataUji['fe'];
-		$th = $dataUji['th'];
-		$tds = $dataUji['tds'];
-		$ph = $dataUji['ph'];
-
-		$this->db->where('id_data_latih', $id_taken);
-		$bobot_1 = $this->Model_latih->get_data_latih();
-		$this->db->reset_query();
-		$this->db->order_by('id_data_latih', 'DESC');
-		$this->db->limit(4);
-		$bobot_2 = $this->Model_latih->get_data_latih();
-		$result_bobot_1 = $bobot_1->row();
-		$id_bobot_1 = $result_bobot_1->id_data_latih;
-		$data_bobot[] = array('tc' => $result_bobot_1->tc, 
-		'so4' => $result_bobot_1->so4, 'mn' => $result_bobot_1->mn,
-		'fe' => $result_bobot_1->fe, 'th' => $result_bobot_1->th,
-		'tds' => $result_bobot_1->tds, 'ph' => $result_bobot_1->ph);
-
-		$id_bobot_array[] = $id_bobot_1;
-		foreach ($bobot_2->result() as $result_bobot_2) {
-			$id_bobot_array[] = $result_bobot_2->id_data_latih;
-			$data_bobot[] = array('tc' => $result_bobot_2->tc, 
-			'so4' => $result_bobot_2->so4, 'mn' => $result_bobot_2->mn,
-			'fe' => $result_bobot_2->fe, 'th' => $result_bobot_2->th,
-			'tds' => $result_bobot_2->tds, 'ph' => $result_bobot_2->ph);
+	protected function getPengujianValue()
+	{
+		$new_klasifikasi = $this->klasifikasi;
+		$data_klasifikasi = $new_klasifikasi->get_all();
+		$DataPengujianUser = array();
+		foreach ($data_klasifikasi->result() as $klasifikasi) {
+			$klasifikasiName = $klasifikasi->nama_klasifikasi;
+			$lower_nama_klasifikasi = strtolower($klasifikasiName);
+			$b = $this->input->post($lower_nama_klasifikasi, TRUE);
+			$DataPengujianUser[$lower_nama_klasifikasi] = $b;
 		}
-		$bobot_ternormalisasi = $this->getNormalizeData($data_bobot);
+		$DataPengujianUser['target'] = $this->input->post("target", TRUE);
+		return array('DataPengujianUser' => $DataPengujianUser);
+	}
+
+	protected function iterasiAndEuclideanDistance(array $pengujian, $id_data_latih)
+	{
+		$getTrueWeightLatih = $this->getResultInitWeightUji($id_data_latih);
+		$dataLatihan = $getTrueWeightLatih['x'];
+		// EUCLIDEAN
+		$kelas_euclidean_distance = $this->euclidean_distance_init($pengujian, $dataLatihan);
+		// KELAS YANG DIDAPAT (HASIL YANG PALING MINIMUM)
+		return $kelas_euclidean_distance;
+	}
+
+	protected function getResultInitWeightUji($id_bobot_array)
+	{
 		$this->db->reset_query();
 		$this->db->where_not_in('id_data_latih', $id_bobot_array);
 		$this->db->order_by("id_data_latih", 'DESC');
@@ -196,14 +178,59 @@ class Pengujian extends CI_Controller
 		$id_latih_array = array();
 		foreach ($latih_data_db->result() as $result_bobot_2) {
 			$id_latih_array[] = $result_bobot_2->id_data_latih;
-			$data_latih[] = array('tc' => $result_bobot_2->tc, 
-			'so4' => $result_bobot_2->so4, 'mn' => $result_bobot_2->mn,
-			'fe' => $result_bobot_2->fe, 'th' => $result_bobot_2->th,
-			'tds' => $result_bobot_2->tds, 'ph' => $result_bobot_2->ph);
+			$data_latih[] = array(
+				'tc' => $result_bobot_2->tc,
+				'so4' => $result_bobot_2->so4, 'mn' => $result_bobot_2->mn,
+				'fe' => $result_bobot_2->fe, 'th' => $result_bobot_2->th,
+				'tds' => $result_bobot_2->tds, 'ph' => $result_bobot_2->ph
+			);
 		}
 		$latih_ternormalisasi = $this->getNormalizeData($data_latih);
-		
-		return array('w' => $bobot_ternormalisasi, 'w_id' => $id_bobot_array, 'x' => $latih_ternormalisasi);
+
+		return array('w_id' => $id_bobot_array, 'x' => $latih_ternormalisasi);
+	}
+
+	protected function getBobotAwalNormalized($dataUji, $id_taken)
+	{
+		$tc = $dataUji['tc'];
+		$so4 = $dataUji['so4'];
+		$mn = $dataUji['mn'];
+		$fe = $dataUji['fe'];
+		$th = $dataUji['th'];
+		$tds = $dataUji['tds'];
+		$ph = $dataUji['ph'];
+		$target = $dataUji['target'];
+
+
+		$data_bobot[] = array(
+			'tc' => $tc,
+			'so4' => $so4, 'mn' => $mn,
+			'fe' => $fe, 'th' => $th,
+			'tds' => $tds, 'ph' => $ph, 'target' => $target
+		);
+
+		$this->db->reset_query();
+		$this->db->order_by('id_data_latih', 'DESC');
+		$this->db->limit(4);
+		$bobot_2 = $this->Model_latih->get_data_latih();
+
+		$id_bobot_1 = $id_taken;
+		$id_bobot_array[] = $id_bobot_1;
+		foreach ($bobot_2->result() as $result_bobot_2) {
+			$id_bobot_array[] = $result_bobot_2->id_data_latih;
+			$data_bobot[] = array(
+				'tc' => $result_bobot_2->tc,
+				'so4' => $result_bobot_2->so4, 'mn' => $result_bobot_2->mn,
+				'fe' => $result_bobot_2->fe, 'th' => $result_bobot_2->th,
+				'tds' => $result_bobot_2->tds, 'ph' => $result_bobot_2->ph,
+				'target' => $result_bobot_2->target
+			);
+		}
+
+
+		$bobot_ternormalisasi = $this->getNormalizeData($data_bobot);
+		$return = array('x' => $bobot_ternormalisasi, 'id_bobot' => $id_bobot_array);
+		return $return;
 	}
 
 	protected function getNormalizeData($data_awal)
@@ -239,122 +266,158 @@ class Pengujian extends CI_Controller
 
 			return array('ph' => $ph, 'tds' => $tds, 'th' => $th, 'fe' => $fe, 'mn' => $mn, 'so4' => $so4, 'tc' => $tc);
 		}
-		
 	}
 
-	protected function iterasi(Model_pengujian $new_pengujian, Array $pengujian, $id_data_latih)
-	{
-		
-		$this->db->where("id_data_latih !=", $id_data_latih);
-		$data = $this->Model_latih->get_data_latih()->result();
-		foreach($data as $data_latih){
-			$new_tc = $data_latih->tc;
-			$new_so4 = $data_latih->so4;
-			$new_mn = $data_latih->mn;
-			$new_fe = $data_latih->fe;
-			$new_th = $data_latih->th;
-			$new_tds = $data_latih->tds;
-			$new_ph = $data_latih->ph;
-			$id = $data_latih->id_data_latih;
-			$array_latihan = array('tc' => $new_tc, 'so4' => $new_so4, 'mn' => $new_mn, 
-									'fe' => $new_fe, 'th' => $new_th, 'tds' => $new_tds,
-									'ph' => $new_ph);
-			$getTrueWeightLatih = $this->getResultInitWeightUji($array_latihan);
-			$converted_tc = $getTrueWeightLatih['converted_tc'];
-			$converted_so4 = $getTrueWeightLatih['converted_so4'];
-			$converted_mn = $getTrueWeightLatih['converted_mn'];
-			$converted_fe = $getTrueWeightLatih['converted_fe'];
-			$converted_th = $getTrueWeightLatih['converted_th'];
-			$converted_tds = $getTrueWeightLatih['converted_tds'];
-			$converted_ph = $getTrueWeightLatih['converted_ph'];
-
-			$new_target = $this->Model_pengujian->getTargetFromDataLatih($converted_tc);
-			$data_iterasi[] = array(
-				'tc' => $converted_tc,
-				'so4' => $converted_so4,
-				'mn' => $converted_mn,
-				'fe' => $converted_fe,
-				'th' => $converted_th,
-				'target' => $new_target,
-				'id' => $id,
-				'th' => $converted_th,
-				'tds' => $converted_tds,
-				'ph' => $converted_ph
-			);
-		}
-		// EUCLIDEAN
-		$kelas_euclidean_distance = $this->euclidean_distance_init($pengujian, $data_iterasi);
-		// KELAS YANG DIDAPAT (HASIL YANG PALING MINIMUM)
-		return $kelas_euclidean_distance;
-
-	}
-
-	protected function euclidean_distance_init(Array $pengujian, Array $IterasiPengujian)
+	protected function euclidean_distance_init(array $pengujian, array $data_latih)
 	{
 		$init_kelas = array();
-		for ($i=0; $i < count($IterasiPengujian); $i++) { 
-			$untuk_sum = array();
-			$tc_awal = $pengujian['tc'];
-			$tc_latih = $IterasiPengujian[$i]['tc'];
-			$pow_tc = $this->get_in_pow($tc_awal, $tc_latih);
-			array_push($untuk_sum, $pow_tc);
+		for ($i = 0; $i < count($data_latih); $i++) {
+			for ($j = 0; $j < count($pengujian); $j++) {
+				$untuk_sum = array();
+				$tc_awal = $pengujian[$j]['tc'];
+				$tc_latih = $data_latih[$i]['tc'];
+				$pow_tc = $this->get_in_pow($tc_awal, $tc_latih);
+				array_push($untuk_sum, $pow_tc);
 
-			$so4_awal = $pengujian['so4'];
-			$so4_latih = $IterasiPengujian[$i]['so4'];
-			$pow_so4 = $this->get_in_pow($so4_awal, $so4_latih);
-			array_push($untuk_sum, $pow_so4);
+				$so4_awal = $pengujian[$j]['so4'];
+				$so4_latih = $data_latih[$i]['so4'];
+				$pow_so4 = $this->get_in_pow($so4_awal, $so4_latih);
+				array_push($untuk_sum, $pow_so4);
 
-			$mn_awal = $pengujian['mn'];
-			$mn_latih = $IterasiPengujian[$i]['mn'];
-			$pow_mn = $this->get_in_pow($mn_awal, $mn_awal);
-			array_push($untuk_sum, $pow_mn);
+				$mn_awal = $pengujian[$j]['mn'];
+				$mn_latih = $data_latih[$i]['mn'];
+				$pow_mn = $this->get_in_pow($mn_awal, $mn_awal);
+				array_push($untuk_sum, $pow_mn);
 
-			$fe_awal = $pengujian['fe'];
-			$fe_latih = $IterasiPengujian[$i]['fe'];
-			$pow_fe = $this->get_in_pow($fe_awal, $fe_latih);
-			array_push($untuk_sum, $pow_fe);
+				$fe_awal = $pengujian[$j]['fe'];
+				$fe_latih = $data_latih[$i]['fe'];
+				$pow_fe = $this->get_in_pow($fe_awal, $fe_latih);
+				array_push($untuk_sum, $pow_fe);
 
-			$th_awal = $pengujian['th'];
-			$th_latih = $IterasiPengujian[$i]['th'];
-			$pow_th = $this->get_in_pow($th_awal, $th_latih);
-			array_push($untuk_sum, $pow_th);
+				$th_awal = $pengujian[$j]['th'];
+				$th_latih = $data_latih[$i]['th'];
+				$pow_th = $this->get_in_pow($th_awal, $th_latih);
+				array_push($untuk_sum, $pow_th);
 
-			$tds_awal = $pengujian['tds'];
-			$tds_latih = $IterasiPengujian[$i]['tds'];
-			$pow_tds = $this->get_in_pow($tds_awal, $tds_latih);
-			array_push($untuk_sum, $pow_tds);
+				$tds_awal = $pengujian[$j]['tds'];
+				$tds_latih = $data_latih[$i]['tds'];
+				$pow_tds = $this->get_in_pow($tds_awal, $tds_latih);
+				array_push($untuk_sum, $pow_tds);
 
-			$ph_awal = $pengujian['ph'];
-			$ph_latih = $IterasiPengujian[$i]['ph'];
-			$pow_ph = $this->get_in_pow($ph_awal, $ph_latih);
-			array_push($untuk_sum, $pow_ph);
+				$ph_awal = $pengujian[$j]['ph'];
+				$ph_latih = $data_latih[$i]['ph'];
+				$pow_ph = $this->get_in_pow($ph_awal, $ph_latih);
+				array_push($untuk_sum, $pow_ph);
 
-			$sum_all = array_sum($untuk_sum);
-			$sqrt = sqrt($sum_all);
-			
-			$id = intval($IterasiPengujian[$i]['id']);
-			$init_kelas[$i] = array('kelas' => intval($i+1), 'hasil' => $sqrt, 
-			'id' => $id, 'target' => $IterasiPengujian['target'],
-			'tc' => $tc_latih,
-			'so4' => $so4_latih,
-			'mn' => $mn_latih,
-			'fe' => $fe_latih,
-			'th' => $th_latih,
-			'tds' => $tds_latih,
-			'ph' => $ph_latih);
+				$sum_all = array_sum($untuk_sum);
+				$sqrt = sqrt($sum_all);
+				$w[$j] = array('tc' => $tc_awal, 'so4' => $so4_awal, 'mn' => $mn_awal, 'fe' => $fe_awal, 'th' => $th_awal, 'tds' => $tds_awal, 'ph' => $ph_awal, 'target' => $pengujian['target']);
+				$x[$i] = array('tc' => $tc_awal, 'so4' => $so4_latih, 'mn' => $mn_latih, 'fe' => $fe_latih, 'th' => $th_latih, 'tds' => $tds_latih, 'ph' => $ph_latih, 'target' => $data_latih['target']);
+				$id = intval($data_latih[$i]['id']);
+				$init_kelas[$j] = array(
+					'hasil' => $sqrt,
+					'x' => $x[$i],
+					'w' => $w[$j]
+				);
+			}
 		}
-		asort($init_kelas);
+		asort($init_kelas, SORT_NUMERIC);
 		// $WINNER = $init_kelas[0];
 		// $new_pengujian->set_push_usedID($WINNER['id']);
 		// $new_pengujian->set_kelas($init_kelas[0]);
 		return $init_kelas;
 	}
 
-	protected function targetAwalSamaDenganTargetHasil(Array $bobotAwal, Array $bobotAkhir){
-
+	protected function getNewLearningRate($a, $deca)
+	{
+		return floatval($a - ($a * $deca));
 	}
 
-	
+	protected function targetAwalSamaDenganTargetHasil(array $wLama, $x, $learningRate)
+	{
+		$new_klasifikasi = $this->klasifikasi;
+		$data_klasifikasi = $new_klasifikasi->get_all();
+		$wBaru = array();
+		for ($i = 0; $i < count($wLama); $i++) {
+
+			foreach ($data_klasifikasi->result() as $klasifikasi) {
+				$klasifikasiName = $klasifikasi->nama_klasifikasi;
+				$lName = strtolower($klasifikasiName);
+
+				$lastCalculationKlasifikasi = $learningRate * ($x[$lName] - $wLama[$i][$lName]);
+				$wBaru[$i][$lName] = $wLama[$i][$lName] + $lastCalculationKlasifikasi;
+			}
+			$wBaru[$i]['target'] = $wLama['target'];
+		}
+		return $wBaru;
+	}
+
+	protected function targetAwalTidakSamaDenganTargetHasil($winners, $window, $learningRate)
+	{
+		# code...
+		$yc = $winners[0]['w'];
+		$yr = $winners[1]['w'];
+		$dc = $winners[0]['hasil'];
+		$dr = $winners[1]['hasil'];
+		$dcCondition = 1 - $window;
+		$drCondition = 1 + $window;
+		if ($dc > $dcCondition && $dr < $drCondition) {
+			return $this->windowTerpenuhi($winners, $learningRate);
+		} else {
+			$x = $winners[0];
+			return $this->windowTidakTerpenuhi($winners, $learningRate);
+		}
+	}
+
+	protected function windowTerpenuhi($winners, $learningRate)
+	{
+		# code...
+		$new_klasifikasi = $this->klasifikasi;
+		$data_klasifikasi = $new_klasifikasi->get_all();
+		$yc = $winners[0]['w'];
+		$yr = $winners[1]['w'];
+		$x = $winners[0]['x'];
+		$newYC = array();
+		$newYR = array();
+		foreach ($data_klasifikasi->result() as $klasifikasi) {
+			$klasifikasiName = $klasifikasi->nama_klasifikasi;
+			$lName = strtolower($klasifikasiName);
+
+			$lastCalculationY = ($learningRate * ($x[$lName] - $yc[$lName]));
+			// PERBARUI NILAI YC
+			$newYC[$lName] = $yc[$lName] - $lastCalculationY;
+			// PERBARUI NILAI YR
+			$newYR[$lName] = $yr[$lName] + $lastCalculationY;
+		}
+		$winners[0]['w'] = $newYC;
+		$winners[1]['w'] = $newYR;
+		return $winners;
+	}
+
+	protected function windowTidakTerpenuhi($wLama, $learningRate)
+	{
+		# code...
+		$new_klasifikasi = $this->klasifikasi;
+		$data_klasifikasi = $new_klasifikasi->get_all();
+		$returnArray = $wLama;
+		$w = $wLama[0]['w'];
+		$yr = $wLama[1]['w'];
+		$x = $wLama[0]['x'];
+		$wBaru = array();
+		foreach ($data_klasifikasi->result() as $klasifikasi) {
+			$klasifikasiName = $klasifikasi->nama_klasifikasi;
+			$lName = strtolower($klasifikasiName);
+
+			$lastCalculationWBaru = ($learningRate * ($x[$lName] - $w[$lName]));
+			// PERBARUI NILAI YC
+			$wBaru[$lName] = $w[$lName] - $lastCalculationWBaru;
+			// PERBARUI NILAI YR
+		}
+		$returnArray[0]['w'] = $wBaru;
+		return $returnArray;
+	}
+
+
 
 	// public function get_klasifikasi()
 	// {
@@ -374,7 +437,6 @@ class Pengujian extends CI_Controller
 
 	public function updating_rate_lvq2()
 	{
-		
 	}
 
 	// protected function normalisasi($data_a, $data_b)
@@ -398,7 +460,7 @@ class Pengujian extends CI_Controller
 	// 	$result_th = $MP->result_var($th, $min_th, $max_th);
 	// }
 
-	
+
 
 	// protected function euclidean_kmeans($data_awal, $data_dalam)
 	// {
@@ -422,11 +484,6 @@ class Pengujian extends CI_Controller
 	protected function array_data_latih()
 	{
 		return $this->Model_latih->get_rest_data()->result_array();
-	}
-
-	public function get_classification_data_latih()
-	{
-		$data = $this->Model_latih->get_rest_data();
 	}
 
 	// public function set_data_latih()
