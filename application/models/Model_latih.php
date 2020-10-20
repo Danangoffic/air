@@ -62,7 +62,6 @@ class Model_latih extends CI_Model{
     public function insert_data()
     {
         $query = $this->db->insert("data_latih", $this);
-        $this->id_latih = $this->db->insert_id();
         return $query;
     }
 
