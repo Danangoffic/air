@@ -9,7 +9,10 @@ class Model_users extends CI_Model
 {
 	public function get_all()
 	{
-		# code...
+		$this->db->select('id_user, username, user_class');
+		$this->db->from('master_user');
+		$this->db->order_by("id_user", "DESC");
+		return $this->db->get();
 	}
 
 	public function get_by($username, $password)
@@ -43,5 +46,24 @@ class Model_users extends CI_Model
 		$this->db->from('master_user');
 		$this->db->limit(1);
 		return $this->db->get();
+	}
+
+	public function updateUser($id_user, $dataUpdate)
+	{
+		return $this->db->update("master_user", $dataUpdate, array('id_user' => $id_user));
+	}
+
+	public function getUserByIdUser($id_user)
+	{
+		$this->db->where('id_user =', $id_user);
+		$this->db->select('id_user, username, user_class');
+		$this->db->from('master_user');
+		$this->db->limit(1);
+		return $this->db->get();
+	}
+
+	public function deleteByIdUser($id_user)
+	{
+		return $this->db->delete("master_user", array('id_user' => $id_user), 1);
 	}
 }
