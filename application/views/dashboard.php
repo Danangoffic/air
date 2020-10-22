@@ -9,16 +9,16 @@
                 <div class="page-head">
                     <div class="container">
                         <!-- BEGIN PAGE TITLE -->
-                        <!-- <div class="page-title">
-                            <h1>Responsive Bootstrap Tables
-                                <small>responsive bootstrap table demos</small>
+                        <div class="page-title">
+                            <h1>Selamat datang <?=$this->session->username;?>
+                                <small></small>
                             </h1>
-                        </div> -->
+                        </div>
                         <!-- END PAGE TITLE -->
                         <!-- BEGIN PAGE TOOLBAR -->
                         <!-- <div class="page-toolbar">
                             <div style="margin-top: 15px;">
-                            <a class="btn green btn-outline" href="<?=base_url('alat/add')?>"><i class="fa fa-plus-circle"></i> Tambah Alat</a>
+                            <a class="btn green btn-outline" href="<?= base_url('alat/add') ?>"><i class="fa fa-plus-circle"></i> Tambah Alat</a>
                             </div>
                         </div> -->
                         <!-- END PAGE TOOLBAR -->
@@ -29,19 +29,19 @@
                 <div class="page-content">
                     <div class="container">
                         <!-- BEGIN PAGE BREADCRUMBS -->
-                        <ul class="page-breadcrumb breadcrumb">
+                        <!-- <ul class="page-breadcrumb breadcrumb">
                             <li>
                                 <span>Home</span>
                             </li>
-                        </ul>
+                        </ul> -->
                         <!-- END PAGE BREADCRUMBS -->
                         <!-- BEGIN PAGE CONTENT INNER -->
-                        <div class="page-content-inner">
-                            <div class="row">
-                                <div class="col-md-12">
-                                </div>
+                        <!-- <div class="page-content-inner">
+                            <div class="m-heading-1 border-green m-bordered">
+                                <h3> Halaman <?=$this->session->user_class?></h3>
+                                
                             </div>
-                        </div>
+                        </div> -->
                         <!-- END PAGE CONTENT INNER -->
                     </div>
                 </div>

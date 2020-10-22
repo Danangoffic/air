@@ -19,6 +19,9 @@ class Users extends CI_Controller
 		if($this->session->userdata('user_class')!=='admin'){
 			redirect(base_url());
 		}
+		$data_user = $this->user->get_all();
+		$page = array('page'=>'index_user', 'data_user' => $data_user, 'title'=>"Management User", 'script'=>null);
+		$this->load->view('templates/layout', $page);
 	}
 
 	public function login()
@@ -77,6 +80,9 @@ class Users extends CI_Controller
 		if(!$this->session->userdata('username')){
 			redirect(base_url('users/login'));
 		}
+		// $data_user = $this->user->get_all();
+		$page = array('page'=>'form_add_user', 'title'=>"Tambahkan Data User", 'script'=>null);
+		$this->load->view('templates/layout', $page);
 	}
 
 	public function detail($id_user=null)
@@ -100,12 +106,30 @@ class Users extends CI_Controller
 		if(!$this->session->userdata('username')){
 			redirect(base_url('users/login'));
 		}
+		
+		$data_user= $this->user->getUserByIdUser($id_user)->row();
+		$page = array('page'=>'form_edit_user', 'data' => $data_user, 'id_user' => $id_user, 'title'=>"Ubah Data User", 'script'=>null);
+		$this->load->view('templates/layout', $page);
 	}
 
 	public function insert()
 	{
 		if(!$this->session->userdata('username')){
 			redirect(base_url('users/login'));
+		}
+		$username = $this->input->post("username", TRUE);
+		$password = $this->generatePassword();
+		$user_class = $this->input->post("user_class", TRUE);
+		$array_insert = array('username' => $username, 'password' => $password, 'user_class' => $user_class);
+		$insert = $this->user->insert_user($array_insert);
+		if($insert){
+			$user = $this->user->getUserByUsername($username)->row_array();
+			$user['encrypted_password'] = $password;
+			$this->session->set_flashdata("success", "Sukses tambahkan user " . $username);
+			redirect(base_url('Users'));
+		}else{
+			$this->session->set_flashdata("error", "Gagal tambahkan user ");
+			redirect(base_url('Users'));
 		}
 	}
 
@@ -114,12 +138,41 @@ class Users extends CI_Controller
 		if(!$this->session->userdata('username')){
 			redirect(base_url('users/login'));
 		}
+		if($this->session->userdata("user_class")!=="admin"){
+			redirect(base_url('users/login'));
+		}
+		$password = $this->generatePassword();
+		$id_user = $this->input->post("id_user");
+		$user_class = $this->input->post("user_class");
+		$array_user = array('password' => $password, 'user_class' => $user_class);
+		$update = $this->user->updateUser($id_user, $array_user);
+		if($update){
+			$data_user = $this->user->getUserByIdUser($id_user)->row();
+			$this->session->set_flashdata("success", "Sukses update password atau userclass dengan pengguna " . $data_user->username);
+			redirect(base_url('Users'));
+		}else{
+			// $data_user = $this->user->getUserByIdUser($id_user)->row();
+			$this->session->set_flashdata("error", "gagal update password atau userclass");
+			redirect(base_url('Users'));
+		}
 	}
 
 	public function delete($id_user)
 	{
 		if(!$this->session->userdata('username')){
 			redirect(base_url('users/login'));
+		}
+		// if($thi)
+		if($id_user!==""){
+			$delete = $this->user->deleteByIdUser($id_user);
+			if($delete){
+				$this->session->set_flashdata("success", "Sukses hapus data user");
+				redirect(base_url('Users'));
+			}else{
+				// $data_user = $this->user->getUserByIdUser($id_user)->row();
+				$this->session->set_flashdata("error", "gagal haous data user");
+				redirect(base_url('Users'));
+			}
 		}
 	}
 
