@@ -1,7 +1,5 @@
 <?php
 
-use phpDocumentor\Reflection\Types\Array_;
-
 /**
  * 
  */
@@ -11,6 +9,14 @@ class Pengujian extends CI_Controller
 	function __construct()
 	{
 		parent::__construct();
+		if($this->session->has_userdata("username")){
+			if($this->session->userdata('user_class')!=="penguji"){
+				$this->session->set_flashdata("error", "Bukan halaman untuk kelas pengguna " . $this->session->userdata("user_class"));
+				redirect(base_url());
+			}
+		}else{
+			redirect(base_url());
+		}
 		$this->load->model('Model_air', 'air');
 		$this->load->model('Model_klasifikasi', 'klasifikasi');
 		$this->load->model('Model_rule_klasifikasi_air', 'rule_klasifikasi');
@@ -57,275 +63,336 @@ class Pengujian extends CI_Controller
 	public function doPengujian()
 	{
 		// DAPETIN DATA YANG DI INPUT
-		$new_pengujian = $this->Model_pengujian;
-		$new_latih = $this->Model_latih;
-		$new_klasifikasi = $this->klasifikasi;
 		$learningRate = floatval($this->input->post('learningRate'));
 		$max_epoch = intval($this->input->post("epoch"));
 		$epoch = 0;
 		$deca = 0.1;
 		$mina = 0.001;
-		$target_input = $this->input->post("target", TRUE);
 		$window = $this->input->post("window", TRUE);
 		// CEK LEARNING RATE LIMIT
-		var_dump($this->input->post());
+		// var_dump($this->input->post());
 		// exit();
 
 		//GET INPUT VALUE
-		$PengujianValue = $this->getPengujianValue();
-		$DataPengujianUser = $PengujianValue['DataPengujianUser'];
-
+		$DataPengujianUser = $this->setPengujianValue();
+		// $DataPengujianUser = $PengujianValue['DataPengujianUser'];
+		// echo "<p>Data pengujian user :</p>";
+		// echo json_encode($DataPengujianUser);
 
 		$insert_data_latih = $this->Model_latih->insert_data($DataPengujianUser);
+		// echo "<p> query insert : " . $this->db->last_query() . "</p>";
 		if (!$insert_data_latih) {
 			$this->session->set_flashdata("error", "Gagal Insert Data Latih Baru");
 			redirect(base_url('Pengujian'));
 		}
 		$id_data_latih = $this->db->insert_id();
 		// $new_pengujian->set_push_usedID($id_data_latih);
-		echo "<br> id latih : " . $id_data_latih . "<br>";
-		echo "<br> new pengujian : <br> ";
+		// echo "<br> id latih : " . $id_data_latih . "<br>";
 		// var_dump($new_pengujian);
 
 		//TODO: INISIALISASI
 		// $dataInitResultWeightUji = $this->getResultInitWeightUji($DataPengujianUser, $id_data_latih);
-		$target_awal = $target_input;
+		// $target_awal = $target_input;
 		$totalTrue = 0;
-		$totalFailed = 0;
+		$totalAll = 0;
 		$resultCalculation = array();
-		$BobotAwal = $this->getBobotAwalNormalized($DataPengujianUser, $id_data_latih);
+		$BobotAwal = $this->getBobotAwalNormalized($id_data_latih);
 		$id_bobot = $BobotAwal['id_bobot'];
-		$DATA_UJI = $BobotAwal['x'];
+		$nilaiDataLatih = $this->getBobotDataLatih($id_bobot);
+		$dataLatihan = $nilaiDataLatih['x'];
+		$DATA_UJI = $BobotAwal['w'];
+		// echo "Data Uji : " . json_encode($DATA_UJI, JSON_PRETTY_PRINT) . "<br>";
+		$target_awal = null;
+		$pos1 = FALSE;
+		$index_real = 0;
+		$index_next = 1;
+		$kondisiEpoch = ($epoch < $max_epoch) ? TRUE : FALSE;
+		$kondisiLeraningRate = ($learningRate > $mina) ? TRUE : FALSE;
+		$indexEpoch = 0;
 		while (($epoch < $max_epoch) || ($learningRate > $mina)) {
 			# code...
+			$arrayTarget0 = array();
+			$arrayTarget1 = array();
 			$epoch++;
-			$result_kelas_iterasi = $this->iterasiAndEuclideanDistance($DATA_UJI, $id_bobot);
-			//PENENTUAN TARGET
-			$WINNER1 = $result_kelas_iterasi[0];
-			$WINNER2 = $result_kelas_iterasi[1];
-			$BOBOT_WINNER1 = $WINNER1['w'];
-			$BOBOT_WINNER2 = $WINNER2['w'];
-			$target_winner = $BOBOT_WINNER1['target'];
-			$target_winner2 = $BOBOT_WINNER2['target'];
+			$HitunganLVQ2 = $this->iterasiAndEuclideanDistance($DATA_UJI, $dataLatihan, $window, $learningRate);
+			$DATA_UJI = $HitunganLVQ2['DATA_UJI'];
+			$Hasilnya = $HitunganLVQ2['minDistanceEucl'];
+			$FinalX = $Hasilnya['x_nya'];
+			$TotalDataLatihan = $HitunganLVQ2['total_data_latih'];
+			$TotalDataSesuai = $HitunganLVQ2['total_benar'];
+			$Persentase = $HitunganLVQ2['persentase'];
+			
 
-			$PELATIHAN_WINNER1 = $WINNER1['x'];
-			$PELATIHAN_WINNER2 = $WINNER2['x'];
-			// KONDISI TARGET SESUAI KELAS ATAU TIDAK
-			if ($target_awal === $target_winner) {
-				$totalTrue++;
-				$DATA_UJI = $this->targetAwalSamaDenganTargetHasil($DATA_UJI, $PELATIHAN_WINNER1, $learningRate);
-			} else {
-				$totalFailed++;
-				$DATA_UJI = $this->targetAwalTidakSamaDenganTargetHasil($result_kelas_iterasi, $window, $learningRate);
-			}
 			// PENGURANGAN LEARNING RATE
 			$learningRate = $this->getNewLearningRate($learningRate, $deca);
 
 			//CEK KONDISI UNTUK MENGEMBALIKAN HASIL PERHITUNGAN
 			if (($epoch >= $max_epoch) || ($learningRate <= $mina)) {
-				$percentOfSuccess = ($totalTrue / $totalFailed) * 100;
-				$percentOfSuccess = round($percentOfSuccess, 4);
-				$kelasTarget = $DATA_UJI[0]['w']['target'];
-				$nilaiKelas = $DATA_UJI[0]['hasil'];
-				$bobotKelas = $DATA_UJI[0]['w'];
-
+				
+				// echo "<p><b> Hasil Akhir : " . json_encode($Hasilnya, JSON_PRETTY_PRINT) . "</b></p>";
+				$kondisiEpoch = ($epoch < $max_epoch) ? TRUE : FALSE;
+				$kondisiLeraningRate = ($learningRate > $mina) ? TRUE : FALSE;
+				// echo "<br>Kondisi epoch ($epoch < $max_epoch) : " . $kondisiEpoch . ". <br> Kondisi learning rate ($learningRate > $mina) : " . $kondisiLeraningRate . " . <br>";
+				// echo "Total success : " . $TotalDataSesuai . "<br>";
+				// echo "Total All : " . $TotalDataLatihan . "<br>";
+				// $percentOfSuccess = ($totalTrue / $totalAll) * 100;
+				$percentOfSuccess = round($Persentase, 2);
+				$kelasTarget = $FinalX['target'];
+				$nilaiKelas = $Hasilnya['hasil'];
+				// echo "akurasi : " . $percentOfSuccess . "% untuk kelas " . $kelasTarget;
 				$resultCalculation = array(
 					'learning_rate' => $learningRate,
 					'window' => $window,
 					'percentage' => $percentOfSuccess,
 					'kelas' => $kelasTarget,
 					'nilai' => $nilaiKelas,
-					'bobot' => $bobotKelas
+					'bobot' => $FinalX,
+					'user_input' => $this->input->post(),
+					'TotalDataLatihan' => $TotalDataLatihan,
+					'TotalDataSesuai' => $TotalDataSesuai
 				);
+				break;
 			}
+			$indexEpoch++;
 		}
-		$data_page = array('page' => 'hasil_pengujian', 'script' => null, 'title' => 'Hasil Pengujian', 'hasil' => $resultCalculation, 'act' => 'Pengujian');
+		// echo "<p> END HASIL : " . json_encode($resultCalculation) . "<p>";
+		$data_page = array('page' => 'hasil_pengujian', 'script' => null, 'title' => 'Hasil Pengujian', 'hasil' => $resultCalculation, 'act' => 'Pengujian', 'data_klasifikasi' => $this->klasifikasi->get_all());
 		$this->load->view("templates/layout", $data_page);
 	}
 
-	protected function getPengujianValue()
+	protected function setPengujianValue()
 	{
-		$new_klasifikasi = $this->klasifikasi;
-		$data_klasifikasi = $new_klasifikasi->get_all();
-		$DataPengujianUser = array();
-		foreach ($data_klasifikasi->result() as $klasifikasi) {
-			$klasifikasiName = $klasifikasi->nama_klasifikasi;
-			$lower_nama_klasifikasi = strtolower($klasifikasiName);
-			$b = $this->input->post($lower_nama_klasifikasi, TRUE);
-			$DataPengujianUser[$lower_nama_klasifikasi] = $b;
-		}
-		$DataPengujianUser['target'] = $this->input->post("target", TRUE);
-		return array('DataPengujianUser' => $DataPengujianUser);
+		$ph = $this->input->post("ph", TRUE);
+		$tds = $this->input->post("tds", TRUE);
+		$th = $this->input->post("th", TRUE);
+		$fe = $this->input->post("fe", TRUE);
+		$mn = $this->input->post("mn", TRUE);
+		$so4 = $this->input->post("so4", TRUE);
+		$tc = $this->input->post("tc", TRUE);
+		$target = $this->input->post("target", TRUE);
+		$DataPengujianUser = array(
+			"ph" => $ph,
+			"tds" => $tds,
+			"th" => $th,
+			"fe" => $fe,
+			"mn" => $mn,
+			"so4" => $so4,
+			"tc" => $tc,
+			"target" => $target
+		);
+		return $DataPengujianUser;
 	}
 
-	protected function iterasiAndEuclideanDistance(array $pengujian, $id_data_latih)
+	protected function iterasiAndEuclideanDistance($pengujian = array(), $dataLatihan, $window, $learningRate)
 	{
-		$getTrueWeightLatih = $this->getResultInitWeightUji($id_data_latih);
-		$dataLatihan = $getTrueWeightLatih['x'];
+		// $nilaiDataLatih = $this->getBobotDataLatih($id_data_bobot);
+		// $dataLatihan = $nilaiDataLatih['x'];
 		// EUCLIDEAN
-		$kelas_euclidean_distance = $this->euclidean_distance_init($pengujian, $dataLatihan);
+		// $kelas_euclidean_distance = 
 		// KELAS YANG DIDAPAT (HASIL YANG PALING MINIMUM)
-		return $kelas_euclidean_distance;
+		return $this->euclidean_distance_init($pengujian, $dataLatihan, $window, $learningRate);
 	}
 
-	protected function getResultInitWeightUji($id_bobot_array)
+	protected function getBobotDataLatih($id_bobot_array)
 	{
-		$this->db->reset_query();
-		$this->db->where_not_in('id_data_latih', $id_bobot_array);
-		$this->db->order_by("id_data_latih", 'DESC');
-		$latih_data_db = $this->Model_latih->get_data_latih();
-		$data_latih = array();
+		$data_latih = $this->Model_latih->getDataLatih($id_bobot_array, 12);
+		// echo "<p> query data latih : " . $this->db->last_query() . "</p>";
 		$id_latih_array = array();
-		foreach ($latih_data_db->result() as $result_bobot_2) {
+		foreach ($data_latih->result() as $result_bobot_2) {
 			$id_latih_array[] = $result_bobot_2->id_data_latih;
-			$data_latih[] = array(
-				'tc' => $result_bobot_2->tc,
-				'so4' => $result_bobot_2->so4, 'mn' => $result_bobot_2->mn,
-				'fe' => $result_bobot_2->fe, 'th' => $result_bobot_2->th,
-				'tds' => $result_bobot_2->tds, 'ph' => $result_bobot_2->ph
-			);
 		}
 		$latih_ternormalisasi = $this->getNormalizeData($data_latih);
 
 		return array('w_id' => $id_bobot_array, 'x' => $latih_ternormalisasi);
 	}
 
-	protected function getBobotAwalNormalized($dataUji, $id_taken)
+	protected function getBobotAwalNormalized()
 	{
-		$tc = $dataUji['tc'];
-		$so4 = $dataUji['so4'];
-		$mn = $dataUji['mn'];
-		$fe = $dataUji['fe'];
-		$th = $dataUji['th'];
-		$tds = $dataUji['tds'];
-		$ph = $dataUji['ph'];
-		$target = $dataUji['target'];
-
-
-		$data_bobot[] = array(
-			'tc' => $tc,
-			'so4' => $so4, 'mn' => $mn,
-			'fe' => $fe, 'th' => $th,
-			'tds' => $tds, 'ph' => $ph, 'target' => $target
-		);
-
-		$this->db->reset_query();
-		$this->db->order_by('id_data_latih', 'DESC');
-		$this->db->limit(4);
-		$bobot_2 = $this->Model_latih->get_data_latih();
-
-		$id_bobot_1 = $id_taken;
-		$id_bobot_array[] = $id_bobot_1;
-		foreach ($bobot_2->result() as $result_bobot_2) {
-			$id_bobot_array[] = $result_bobot_2->id_data_latih;
-			$data_bobot[] = array(
-				'tc' => $result_bobot_2->tc,
-				'so4' => $result_bobot_2->so4, 'mn' => $result_bobot_2->mn,
-				'fe' => $result_bobot_2->fe, 'th' => $result_bobot_2->th,
-				'tds' => $result_bobot_2->tds, 'ph' => $result_bobot_2->ph,
-				'target' => $result_bobot_2->target
-			);
+		$bobot0 = $this->Model_latih->getDataUjiUser();
+		// echo "<p> query data bobot awal : " . $this->db->last_query() . "</p>";
+		foreach ($bobot0->result() as $key) {
+			# code...
+			$id_bobot_array[]  = $key->id_data_latih;
 		}
-
-
-		$bobot_ternormalisasi = $this->getNormalizeData($data_bobot);
-		$return = array('x' => $bobot_ternormalisasi, 'id_bobot' => $id_bobot_array);
-		return $return;
+		$bobot_ternormalisasi = $this->getNormalizeData($bobot0);
+		return array('w' => $bobot_ternormalisasi, 'id_bobot' => $id_bobot_array);
 	}
 
 	protected function getNormalizeData($data_awal)
 	{
-		foreach ($data_awal as $key) {
-			$tc_atas = $key['tc'] - $key['min_tc'];
-			$tc_bawah = $key['max_tc'] - $key['min_tc'];
+		$data_normalisasi = array();
+		$dataMinMax = $this->Model_latih->getDataMinMax()->row_array();
+		// echo "<p> Data awal yang dibutuhkan : " . json_encode($data_awal->result_array()) . "</p>";
+		foreach ($data_awal->result_array() as $key) {
+			$tc_atas = $key['tc'] - $dataMinMax['min_tc'];
+			$tc_bawah = $dataMinMax['max_tc'] - $dataMinMax['min_tc'];
 			$tc = $tc_atas / $tc_bawah;
 
-			$so4_atas = $key['so4'] - $key['min_so4'];
-			$so4_bawah = $key['max_so4'] - $key['min_so4'];
+			$so4_atas = $key['so4'] - $dataMinMax['min_so4'];
+			$so4_bawah = $dataMinMax['max_so4'] - $dataMinMax['min_so4'];
 			$so4 = $so4_atas / $so4_bawah;
 
-			$mn_atas = $key['mn'] - $key['min_mn'];
-			$mn_bawah = $key['max_mn'] - $key['min_mn'];
+			$mn_atas = $key['mn'] - $dataMinMax['min_mn'];
+			$mn_bawah = $dataMinMax['max_mn'] - $dataMinMax['min_mn'];
 			$mn = $mn_atas / $mn_bawah;
 
-			$fe_atas = $key['fe'] - $key['min_fe'];
-			$fe_bawah = $key['max_fe'] - $key['min_fe'];
+			$fe_atas = $key['fe'] - $dataMinMax['min_fe'];
+			$fe_bawah = $dataMinMax['max_fe'] - $dataMinMax['min_fe'];
 			$fe = $fe_atas / $fe_bawah;
 
-			$th_atas = $key['th'] - $key['min_th'];
-			$th_bawah = $key['max_th'] - $key['min_th'];
+			$th_atas = $key['th'] - $dataMinMax['min_th'];
+			$th_bawah = $dataMinMax['max_th'] - $dataMinMax['min_th'];
 			$th = $th_atas / $th_bawah;
 
-			$tds_atas = $key['tds'] - $key['min_tds'];
-			$tds_bawah = $key['max_tds'] - $key['min_tds'];
+			$tds_atas = $key['tds'] - $dataMinMax['min_tds'];
+			$tds_bawah = $dataMinMax['max_tds'] - $dataMinMax['min_tds'];
 			$tds = $tds_atas - $tds_bawah;
 
-			$ph_atas = $key['ph'] - $key['min_ph'];
-			$ph_bawah = $key['max_ph'] - $key['min_ph'];
+			$ph_atas = $key['ph'] - $dataMinMax['min_ph'];
+			$ph_bawah = $dataMinMax['max_ph'] - $dataMinMax['min_ph'];
 			$ph = $ph_atas - $ph_bawah;
 
-			return array('ph' => $ph, 'tds' => $tds, 'th' => $th, 'fe' => $fe, 'mn' => $mn, 'so4' => $so4, 'tc' => $tc);
+			$data_normalisasi[] = array('ph' => $ph, 'tds' => $tds, 'th' => $th, 'fe' => $fe, 'mn' => $mn, 'so4' => $so4, 'tc' => $tc, 'target' => $key['target']);
 		}
+		return $data_normalisasi;
 	}
 
-	protected function euclidean_distance_init(array $pengujian, array $data_latih)
+	protected function euclidean_distance_init($pengujian = array(), $data_latih, $window, $learningRate)
 	{
-		$init_kelas = array();
-		for ($i = 0; $i < count($data_latih); $i++) {
-			for ($j = 0; $j < count($pengujian); $j++) {
+		// echo "<br> nilai pengujian : <br>";
+		// var_dump($pengujian);
+		// echo "<p> nilai data latih : </p>";
+		// var_dump($data_latih);
+		// echo "<p> Total data pengujian : " . count($pengujian) . "<p>";
+		// echo "<p> Data pengujian sebagai berikut : " . json_encode($pengujian, JSON_PRETTY_PRINT);
+		$HitungPerPelatihan = array();
+		$totalAll = count($data_latih);
+		$totalTrue = 0;
+		$DJ = array();
+		$indexKelas = 0;
+		$DISTANCES = array();
+		$DISTANCES_LATIH = array();
+		$indexX = 0;
+		foreach ($data_latih as $i) {
+			$smallestPengujian = array();
+			$indexW = 0;
+			foreach ($pengujian as $j) {
+				$UJIDATA = $this->klasifikasi->get_all();
+				
 				$untuk_sum = array();
-				$tc_awal = $pengujian[$j]['tc'];
-				$tc_latih = $data_latih[$i]['tc'];
-				$pow_tc = $this->get_in_pow($tc_awal, $tc_latih);
-				array_push($untuk_sum, $pow_tc);
-
-				$so4_awal = $pengujian[$j]['so4'];
-				$so4_latih = $data_latih[$i]['so4'];
-				$pow_so4 = $this->get_in_pow($so4_awal, $so4_latih);
-				array_push($untuk_sum, $pow_so4);
-
-				$mn_awal = $pengujian[$j]['mn'];
-				$mn_latih = $data_latih[$i]['mn'];
-				$pow_mn = $this->get_in_pow($mn_awal, $mn_awal);
-				array_push($untuk_sum, $pow_mn);
-
-				$fe_awal = $pengujian[$j]['fe'];
-				$fe_latih = $data_latih[$i]['fe'];
-				$pow_fe = $this->get_in_pow($fe_awal, $fe_latih);
-				array_push($untuk_sum, $pow_fe);
-
-				$th_awal = $pengujian[$j]['th'];
-				$th_latih = $data_latih[$i]['th'];
-				$pow_th = $this->get_in_pow($th_awal, $th_latih);
-				array_push($untuk_sum, $pow_th);
-
-				$tds_awal = $pengujian[$j]['tds'];
-				$tds_latih = $data_latih[$i]['tds'];
-				$pow_tds = $this->get_in_pow($tds_awal, $tds_latih);
-				array_push($untuk_sum, $pow_tds);
-
-				$ph_awal = $pengujian[$j]['ph'];
-				$ph_latih = $data_latih[$i]['ph'];
-				$pow_ph = $this->get_in_pow($ph_awal, $ph_latih);
-				array_push($untuk_sum, $pow_ph);
-
+				$w = array();
+				$x = array();
+				foreach ($UJIDATA->result() as $k) {
+					// echo json_encode($k);
+					$lower = strtolower($k->nama_klasifikasi);
+					$awal = $j[$lower];
+					$latih = $i[$lower];
+					$pow = $this->get_in_pow($awal, $latih);
+					array_push($untuk_sum, $pow);
+					$w[$lower] = round($awal, 2);
+					$x[$lower] = round($latih, 2);
+				}
+				
+				$w['target'] =  $j['target'];
+				$x['target'] =  $i['target'];
 				$sum_all = array_sum($untuk_sum);
-				$sqrt = sqrt($sum_all);
-				$w[$j] = array('tc' => $tc_awal, 'so4' => $so4_awal, 'mn' => $mn_awal, 'fe' => $fe_awal, 'th' => $th_awal, 'tds' => $tds_awal, 'ph' => $ph_awal, 'target' => $pengujian['target']);
-				$x[$i] = array('tc' => $tc_awal, 'so4' => $so4_latih, 'mn' => $mn_latih, 'fe' => $fe_latih, 'th' => $th_latih, 'tds' => $tds_latih, 'ph' => $ph_latih, 'target' => $data_latih['target']);
-				$id = intval($data_latih[$i]['id']);
-				$init_kelas[$j] = array(
+				$sqrt = round(sqrt($sum_all), 2);
+				$HitungPerPelatihan = array(
 					'hasil' => $sqrt,
-					'x' => $x[$i],
-					'w' => $w[$j]
+					'x_nya' => $x,
+					'x' => $data_latih,
+					'w_nya' => $w,
+					'w' => $pengujian,
+					'indexX' => $indexX,
+					'indexW' => $indexW,
 				);
+				$smallestPengujian[$indexW] = $HitungPerPelatihan;
+				$indexW++;
 			}
+			// $DISTANCES[$i] = $smallestPengujian;
+			$DISTANCES = $this->array_sort($smallestPengujian, "hasil");
+			// echo "<p>D $indexW terendah adalah : " . json_encode($DISTANCES[0]) . "<p>";
+			$DISTANCES_LATIH[$indexX] = $DISTANCES[0];
+			$DJ[$indexX] = $DISTANCES[0];
+			$D_I_J = $DISTANCES_LATIH[$indexX];
+			$WIJ = $D_I_J['w_nya'];
+			$XIJ = $D_I_J['x_nya'];
+			$WTarget = $WIJ['target'];
+			$XTarget = $XIJ['target'];
+			if ($WTarget === $XTarget) {
+				$totalTrue++;
+			}
+			$indexX++;
 		}
-		asort($init_kelas, SORT_NUMERIC);
+		// for ($i = 0; $i < $totalAll; $i++) {
+
+		$DISTANCES_LATIH = $this->array_sort($DISTANCES_LATIH, "hasil");
+
+		// }
+		// echo "<p><b>Total Data: $totalAll . total true : $totalTrue</b></p>";
+		$persentase = (floatval($totalTrue / $totalAll)) * 100;
+		// $verySmallest
+		// $DistanceEucl = $this->array_sort($DJ, "hasil");
+		$minDistanceEucl = $DISTANCES_LATIH[0];
+		$targetWMin = $minDistanceEucl['w_nya']['target'];
+		$targetxMin = $minDistanceEucl['x_nya']['target'];
+		$BobotDistanceMin =$DISTANCES_LATIH[0]['w'];
+		$LatihDistanceMin = $DISTANCES_LATIH[0]['x'];
+		if ($targetWMin === $targetxMin) {
+			// $totalTrue++;
+			// echo "<p> WINNER IS : " . json_encode($minDistanceEucl) . "<p>";
+			$pengujian = $this->targetAwalSamaDenganTargetHasil($pengujian, $minDistanceEucl['x'], $learningRate, $minDistanceEucl);
+		} else {
+			$result_hasil_akhir = $DISTANCES_LATIH[1]['hasil'];
+			$pengujian = $this->targetAwalTidakSamaDenganTargetHasil($pengujian, $DISTANCES_LATIH, $window, $learningRate);
+		}
+		// echo "<p>Very smallest last : " . json_encode($verySmallest, JSON_PRETTY_PRINT) . " </p>";
+		// echo "<p><b>Target: $targetWMin . Persentase : " . $persentase . " %</b></p>";
+		// exit();
+		// echo "<br> hasil array euclidean: <br>";
+		// echo json_encode($init_kelas);
 		// $WINNER = $init_kelas[0];
 		// $new_pengujian->set_push_usedID($WINNER['id']);
 		// $new_pengujian->set_kelas($init_kelas[0]);
-		return $init_kelas;
+		$returnMap = array('DATA_UJI' => $pengujian, 'minDistanceEucl' => $minDistanceEucl, 'persentase' => $persentase, 'total_data_latih' => $totalAll, 'total_benar' => $totalTrue);
+		return $returnMap;
+	}
+
+	//MANUAL SORTING and Maintains index association.
+	protected function array_sort($array, $on, $order = SORT_ASC)
+	{
+		$new_array = array();
+		$sortable_array = array();
+
+		if (count($array) > 0) {
+			foreach ($array as $k => $v) {
+				if (is_array($v)) {
+					foreach ($v as $k2 => $v2) {
+						if ($k2 == $on) {
+							$sortable_array[$k] = $v2;
+						}
+					}
+				} else {
+					$sortable_array[$k] = $v;
+				}
+			}
+
+			switch ($order) {
+				case SORT_ASC:
+					asort($sortable_array);
+					break;
+				case SORT_DESC:
+					arsort($sortable_array);
+					break;
+			}
+			$newIndex = 0;
+			foreach ($sortable_array as $k => $v) {
+				$new_array[$newIndex] = $array[$k];
+				$newIndex++;
+			}
+		}
+
+		return $new_array;
 	}
 
 	protected function getNewLearningRate($a, $deca)
@@ -333,26 +400,41 @@ class Pengujian extends CI_Controller
 		return floatval($a - ($a * $deca));
 	}
 
-	protected function targetAwalSamaDenganTargetHasil(array $wLama, $x, $learningRate)
+	protected function targetAwalSamaDenganTargetHasil(array $wLama, $x, $learningRate, $hasil)
 	{
-		$new_klasifikasi = $this->klasifikasi;
-		$data_klasifikasi = $new_klasifikasi->get_all();
-		$wBaru = array();
-		for ($i = 0; $i < count($wLama); $i++) {
-
-			foreach ($data_klasifikasi->result() as $klasifikasi) {
-				$klasifikasiName = $klasifikasi->nama_klasifikasi;
-				$lName = strtolower($klasifikasiName);
-
-				$lastCalculationKlasifikasi = $learningRate * ($x[$lName] - $wLama[$i][$lName]);
-				$wBaru[$i][$lName] = $wLama[$i][$lName] + $lastCalculationKlasifikasi;
-			}
-			$wBaru[$i]['target'] = $wLama['target'];
+		$indexXYangDipakai = $hasil['indexX'];
+		$indexWYangDiUbah = $hasil['indexW'];
+		$ModelKlasifikasi = $this->klasifikasi;
+		$data_klasifikasi = $ModelKlasifikasi->get_all();
+		$revisiW = $wLama[$indexWYangDiUbah];
+		$XNYA = $x[$indexXYangDipakai];
+		// echo "<p>WLama nya  adalah : </p>";
+		// echo json_encode($wLama, JSON_PRETTY_PRINT);
+		// echo "<p>Index bobot yang diubah : $indexWYangDiUbah </p>";
+		// echo "<p>X yang dipakai : " . json_encode( $x[$indexXYangDipakai] , JSON_PRETTY_PRINT) . "<p>";
+		// exit();
+		foreach ($data_klasifikasi->result() as $klasifikasi) {
+			$klasifikasiName = $klasifikasi->nama_klasifikasi;
+			$lName = strtolower($klasifikasiName);
+			// echo "$ x [$lName] : " . $revisiW[$lName] . "<br>";
+			// echo "<p>w [$lName] :" . $revisiW[$lName] . " </p>";
+			$lastCalculationKlasifikasi = round($learningRate * ($XNYA[$lName] - $revisiW[$lName]), 2);
+			$wLama[$indexWYangDiUbah][$lName] = round($revisiW[$lName] + $lastCalculationKlasifikasi, 2);
 		}
-		return $wBaru;
+		$wLama[$indexWYangDiUbah]['target'] = $revisiW['target'];
+
+		// echo "<p>WBaru adalah : </p>";
+		// echo json_encode($wLama[$indexWYangDiUbah], JSON_PRETTY_PRINT);
+		// echo "<p>Sehingga W yang dibawa akan menjadi seperti ini : " . json_encode($wLama). " </p>";
+		// foreach ($wLama as $key => $value) {
+		// 	# code...
+		// 	$w = $wLama[$key];
+			
+		// }
+		return $wLama;
 	}
 
-	protected function targetAwalTidakSamaDenganTargetHasil($winners, $window, $learningRate)
+	protected function targetAwalTidakSamaDenganTargetHasil($pengujian, $winners, $window, $learningRate)
 	{
 		# code...
 		$yc = $winners[0]['w'];
@@ -362,14 +444,14 @@ class Pengujian extends CI_Controller
 		$dcCondition = 1 - $window;
 		$drCondition = 1 + $window;
 		if ($dc > $dcCondition && $dr < $drCondition) {
-			return $this->windowTerpenuhi($winners, $learningRate);
+			return $this->windowTerpenuhi($pengujian, $winners, $learningRate);
 		} else {
 			$x = $winners[0];
-			return $this->windowTidakTerpenuhi($winners, $learningRate);
+			return $this->windowTidakTerpenuhi($pengujian, $winners, $learningRate);
 		}
 	}
 
-	protected function windowTerpenuhi($winners, $learningRate)
+	protected function windowTerpenuhi($pengujian, $winners, $learningRate)
 	{
 		# code...
 		$new_klasifikasi = $this->klasifikasi;
@@ -382,27 +464,27 @@ class Pengujian extends CI_Controller
 		foreach ($data_klasifikasi->result() as $klasifikasi) {
 			$klasifikasiName = $klasifikasi->nama_klasifikasi;
 			$lName = strtolower($klasifikasiName);
-
-			$lastCalculationY = ($learningRate * ($x[$lName] - $yc[$lName]));
+			$Y = round($yc[$lName], 2);
+			$lastCalculationY = round(($learningRate * ($x[$lName] - $yc[$lName])), 2);
 			// PERBARUI NILAI YC
-			$newYC[$lName] = $yc[$lName] - $lastCalculationY;
+			$newYC[$lName] = round($Y - $lastCalculationY, 2);
 			// PERBARUI NILAI YR
-			$newYR[$lName] = $yr[$lName] + $lastCalculationY;
+			$newYR[$lName] = round($Y + $lastCalculationY, 2);
 		}
 		$winners[0]['w'] = $newYC;
 		$winners[1]['w'] = $newYR;
 		return $winners;
 	}
 
-	protected function windowTidakTerpenuhi($wLama, $learningRate)
+	protected function windowTidakTerpenuhi($pengujian, $winner2, $learningRate)
 	{
 		# code...
 		$new_klasifikasi = $this->klasifikasi;
 		$data_klasifikasi = $new_klasifikasi->get_all();
-		$returnArray = $wLama;
-		$w = $wLama[0]['w'];
-		$yr = $wLama[1]['w'];
-		$x = $wLama[0]['x'];
+		$returnArray = $pengujian;
+		$w = $winner2[0]['w'];
+		$yr = $winner2[1]['w'];
+		$x = $winner2[0]['x'];
 		$wBaru = array();
 		foreach ($data_klasifikasi->result() as $klasifikasi) {
 			$klasifikasiName = $klasifikasi->nama_klasifikasi;
@@ -426,8 +508,8 @@ class Pengujian extends CI_Controller
 
 	protected function get_in_pow($bobot_terbawa, $bobot_latih)
 	{
-		$calculate = $bobot_terbawa - $bobot_latih;
-		return pow($calculate, 2);
+		$calculate = round($bobot_latih - $bobot_terbawa, 4);
+		return round(pow($calculate, 2), 2);
 	}
 
 	protected function prediksi()
