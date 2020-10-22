@@ -54,13 +54,6 @@
                                         <div class="portlet-title">
                                             <div class="caption">
                                                 <i class="fa fa-eyedropper"></i>Form Input Pengujian </div>
-                                            <div class="tools">
-                                                <a href="javascript:;" class="collapse"> </a>
-                                                <!-- <a href="#portlet-config" data-toggle="modal" class="config"> </a> -->
-                                                <a href="javascript:;" class="reload"> </a>
-                                                 <!-- <a href="javascript:;" class="remove"> </a> -->
-                                                <!-- <a class="btn blue btn-outline btn-sm" href="<?= base_url($act . '/history_pengujian') ?>"><i class="fa fa-minus-circle"></i> Lihat Sejarah Pengujian</a> -->
-                                            </div>
                                         </div>
                                         <div class="portlet-body flip-scroll">
                                             <div class="row">
@@ -169,11 +162,13 @@
                                                         </div>
                                                     </div>
                                                     <div class="portlet-body form">
-                                                        <div class="form-body">
-                                                            <div class="form-group m-t-20">
-                                                                <button class="btn btn-primary" type="submit">Uji Data</button>
-                                                                <button class="btn btn-danger" type="reset">Reset</button>
-                                                                <!-- <a class="btn btn-default" href="<?= base_url($act . '/history_pengujian') ?>">Lihat History</a> -->
+                                                        <div class="col-md-12">
+                                                            <div class="form-body">
+                                                                <div class="form-group m-t-20">
+                                                                    <button class="btn btn-primary" type="submit">Uji Data</button>
+                                                                    <button class="btn btn-danger" type="reset">Reset</button>
+                                                                    <!-- <a class="btn btn-default" href="<?= base_url($act . '/history_pengujian') ?>">Lihat History</a> -->
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </div>

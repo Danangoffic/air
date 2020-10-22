@@ -10,15 +10,15 @@
                     <div class="container">
                         <!-- BEGIN PAGE TITLE -->
                         <div class="page-title">
-                            <h1>Olah Data Klasifikasi Air</h1>
+                            <h1>Data Kandungan Air</h1>
                         </div>
                         <!-- END PAGE TITLE -->
                         <!-- BEGIN PAGE TOOLBAR -->
-                        <div class="page-toolbar">
+                        <!-- <div class="page-toolbar">
                             <div style="margin-top: 15px;">
                             <a class="btn green btn-outline" href="<?=base_url('klasifikasi/add')?>"><i class="fa fa-plus-circle"></i> Tambah Jenis Klasifikasi</a>
                             </div>
-                        </div>
+                        </div> -->
                         <!-- END PAGE TOOLBAR -->
                     </div>
                 </div>
@@ -27,7 +27,7 @@
                 <div class="page-content">
                     <div class="container">
                         <!-- BEGIN PAGE BREADCRUMBS -->
-                        <ul class="page-breadcrumb breadcrumb">
+                        <!-- <ul class="page-breadcrumb breadcrumb">
                             <li>
                                 <a href="<?=base_url();?>">Home</a>
                                 <i class="fa fa-circle"></i>
@@ -35,7 +35,7 @@
                             <li>
                                 <span>Klasifikasi Air</span>
                             </li>
-                        </ul>
+                        </ul> -->
                         <!-- END PAGE BREADCRUMBS -->
                         <!-- BEGIN PAGE CONTENT INNER -->
                         <div class="page-content-inner">
@@ -57,15 +57,15 @@
                                     <div class="portlet box green">
                                         <div class="portlet-title">
                                             <div class="caption">
-                                                <i class="fa fa-eyedropper"></i>Data Klasifikasi Air </div>
+                                                <i class="fa fa-table"></i>Tabel Data Kandungan Air </div>
                                         </div>
                                         <div class="portlet-body flip-scroll">
-                                            <table class="table table-bordered table-striped table-condensed flip-content">
+                                            <table class="table table-bordered table-striped table-condensed flip-content table-hover">
                                                 <thead class="flip-content">
                                                     <tr>
                                                         <th width="5%" class="text-center"> No </th>
                                                         <th> Kalsifikasi Air </th>
-                                                        <th class="text-center"> Aksi </th>
+                                                        <!-- <th class="text-center"> Aksi </th> -->
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -76,10 +76,10 @@
                                                         <tr>
                                                             <td class="text-center"><?=$no;?></td>
                                                             <td><?=$jenis_air->nama_klasifikasi;?></td>
-                                                            <td class="text-center">
-                                                                <a class="btn btn-info" href="<?=base_url('klasifikasi/edit/').$jenis_air->id_klasifikasi?>"><i class="fa fa-edit"></i> Edit</a>
-                                                                <a class="btn btn-danger" href="<?=base_url('klasifikasi/delete/').$jenis_air->id_klasifikasi?>"><i class="fa fa-trash fa-fw"></i> Delete</a>
-                                                            </td>
+                                                            <!-- <td class="text-center"> -->
+                                                                <!-- <a class="btn btn-info" href="<?=base_url('klasifikasi/edit/').$jenis_air->id_klasifikasi?>"><i class="fa fa-edit"></i> Edit</a> -->
+                                                                <!-- <a class="btn btn-danger" href="<?=base_url('klasifikasi/delete/').$jenis_air->id_klasifikasi?>"><i class="fa fa-trash fa-fw"></i> Delete</a> -->
+                                                            <!-- </td> -->
                                                         </tr>
                                                         <?php
                                                         $no++;

@@ -89,12 +89,12 @@
                             ?>
                                 <li>
                                     <a href="<?= base_url('air') ?>" class="nav-link">
-                                        <i class="fa fa-eyedropper"></i> Olah Data Air
+                                        <i class="fa fa-eyedropper"></i> Data Jenis Air
                                     </a>
                                 </li>
                                 <li>
                                     <a class="nav-link" href="<?= base_url('klasifikasi') ?>">
-                                        <i class="fa fa-server"></i> Olah Klasifikasi Air
+                                        <i class="fa fa-server"></i> Data Kandungan Air
                                     </a>
                                 </li>
                                 <li>
