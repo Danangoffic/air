@@ -9,16 +9,16 @@
                 <div class="page-head">
                     <div class="container">
                         <!-- BEGIN PAGE TITLE -->
-                        <div class="page-title">
+                        <!-- <div class="page-title">
                             <h1>Pengujian Air</h1>
-                        </div>
+                        </div> -->
                         <!-- END PAGE TITLE -->
                         <!-- BEGIN PAGE TOOLBAR -->
-                        <div class="page-toolbar">
+                        <!-- <div class="page-toolbar">
                             <div style="margin-top: 15px;">
-                                <a class="btn green btn-outline" href="<?= base_url($act . '/history_pengujian') ?>"><i class="fa fa-minus-circle"></i> Lihat Sejarah Pengujian</a>
+                                
                             </div>
-                        </div>
+                        </div> -->
                         <!-- END PAGE TOOLBAR -->
                     </div>
                 </div>
@@ -27,15 +27,11 @@
                 <div class="page-content">
                     <div class="container">
                         <!-- BEGIN PAGE BREADCRUMBS -->
-                        <ul class="page-breadcrumb breadcrumb">
-                            <li>
-                                <a href="<?= base_url(); ?>">Home</a>
-                                <i class="fa fa-circle"></i>
-                            </li>
+                        <!-- <ul class="page-breadcrumb breadcrumb">
                             <li>
                                 <span>Pengujian Air</span>
                             </li>
-                        </ul>
+                        </ul> -->
                         <!-- END PAGE BREADCRUMBS -->
                         <!-- BEGIN PAGE CONTENT INNER -->
                         <div class="page-content-inner">
@@ -57,12 +53,13 @@
                                     <div class="portlet box green">
                                         <div class="portlet-title">
                                             <div class="caption">
-                                                <i class="fa fa-eyedropper"></i>Lakukan Pengujian </div>
+                                                <i class="fa fa-eyedropper"></i>Form Input Pengujian </div>
                                             <div class="tools">
-                                                <!-- <a href="javascript:;" class="collapse"> </a>
-                                                <a href="#portlet-config" data-toggle="modal" class="config"> </a>
-                                                <a href="javascript:;" class="reload"> </a> -->
-                                                <!-- <a href="javascript:;" class="remove"> </a> -->
+                                                <a href="javascript:;" class="collapse"> </a>
+                                                <!-- <a href="#portlet-config" data-toggle="modal" class="config"> </a> -->
+                                                <a href="javascript:;" class="reload"> </a>
+                                                 <!-- <a href="javascript:;" class="remove"> </a> -->
+                                                <!-- <a class="btn blue btn-outline btn-sm" href="<?= base_url($act . '/history_pengujian') ?>"><i class="fa fa-minus-circle"></i> Lihat Sejarah Pengujian</a> -->
                                             </div>
                                         </div>
                                         <div class="portlet-body flip-scroll">
@@ -73,7 +70,7 @@
                                                             <div class="fomr-group">
                                                                 <label class="control-label col-sm-6" for="learningRate">Learning Rate&nbsp;(&alpha;)</label>
                                                                 <div class="col-sm-6">
-                                                                    <input class="form-control" type="number" min="0.1" name="learningRate" required="" id="learningRate" value="0" step="0.1" max="1">
+                                                                    <input class="form-control" type="number" min="0.1" name="learningRate" required="" id="learningRate" value="0" step="0.1" max="1" value="0.1">
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -91,9 +88,9 @@
                                                     <div class="portlet-body form">
                                                         <div class="form-body">
                                                             <div class="fomr-group">
-                                                                <label class="control-label col-sm-6" for="target">Target</label>
+                                                                <label class="control-label col-sm-6" for="window">Window</label>
                                                                 <div class="col-sm-6">
-                                                                    <input class="form-control" type="number" min="1" name="target" required="" id="target" value="1" max="3" step="1">
+                                                                    <input class="form-control" type="number" min="0.1" name="window" required="" id="window" value="0.1" max="1" step="0.1">
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -160,14 +157,23 @@
                                                         <h3><?= $e->getMessage(); ?></h3>
                                                     <?php
                                                     }
-
                                                     ?>
+                                                    <div class="portlet-body form">
+                                                        <div class="form-body">
+                                                            <div class="fomr-group">
+                                                                <label class="control-label col-sm-6" for="target">Target</label>
+                                                                <div class="col-sm-6">
+                                                                    <input class="form-control" type="number" min="1" name="target" required="" id="target" value="1" max="3" step="1">
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                     <div class="portlet-body form">
                                                         <div class="form-body">
                                                             <div class="form-group m-t-20">
                                                                 <button class="btn btn-primary" type="submit">Uji Data</button>
                                                                 <button class="btn btn-danger" type="reset">Reset</button>
-                                                                <a class="btn btn-default" href="<?= base_url($act . '/history_pengujian') ?>">Lihat History</a>
+                                                                <!-- <a class="btn btn-default" href="<?= base_url($act . '/history_pengujian') ?>">Lihat History</a> -->
                                                             </div>
                                                         </div>
                                                     </div>

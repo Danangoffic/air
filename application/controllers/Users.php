@@ -40,16 +40,25 @@ class Users extends CI_Controller
 			$this->session->set_flashdata('error', 'Password Kosong, harap diisi');
 			redirect(base_url('users/login'));
 		}
-		$username = $this->input->post('username');
-		$password = md5($this->input->post('password'));
+		$username = $this->input->post('username', TRUE);
+		$password = md5($this->input->post('password', TRUE));
 		$where = array('username' => $username, 'password' => $password);
-		$cek = $this->user->get_by($username,$password);
+		$cek = $this->user->getByUsernameAndPassword($username,$password);
 		if($cek->num_rows() > 0){
 			$data = $cek->row();
-			$set_data = array('username' => $data->username,'user_class' => $data->user_class, 'id_user' => $data->id_user);
-			$this->session->set_userdata($set_data);
+			$this->session->set_userdata($cek->row_array());
+			// $set_data = array('username' => $data->username,'user_class' => $data->user_class, 'id_user' => $data->id_user);
+			// $this->session->set_userdata($set_data);
 			$this->session->set_flashdata('success', 'Anda Berhasil Login');
-			redirect(base_url());
+			$userclass = $data->user_class;
+			if($userclass=="penguji"){
+				redirect(base_url('pengujian'));
+			}elseif($userclass=="admin"){
+				redirect(base_url());
+			}else{
+				redirect(base_url());
+			}
+			
 		}else{
 			$error = $this->db->error();
 			$this->session->set_flashdata('error', 'Login gagal, Username / Password yang anda masukkan salah');
@@ -112,5 +121,28 @@ class Users extends CI_Controller
 		if(!$this->session->userdata('username')){
 			redirect(base_url('users/login'));
 		}
+	}
+
+	public function createUser()
+	{
+		# code...
+		$username = $this->input->post("username", TRUE);
+		$password = $this->generatePassword();
+		$user_class = $this->input->post("user_class", TRUE);
+		$array_insert = array('username' => $username, 'password' => $password, 'user_class' => $user_class);
+		$insert = $this->user->insert_user($array_insert);
+		if($insert){
+			$user = $this->user->getUserByUsername($username)->row_array();
+			$user['encrypted_password'] = $password;
+			response(201, array('data' => $user, 'statusMessage' => "success create"));
+		}
+	}
+
+	public function generatePassword()
+	{
+		# code...
+		$password = $this->input->post("password", TRUE);
+		$newPassword = md5($password);
+		return $newPassword;
 	}
 }

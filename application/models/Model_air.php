@@ -37,4 +37,11 @@ class Model_air extends CI_Model
 	{
 		return $this->db->delete('master_jenis_air', $where);
 	}
+
+	public function getByIdJenis($id_jenis)
+	{
+		$this->db->where("id_jenis", $id_jenis);
+		$this->db->order_by('kategori_jenis', 'ASC');
+		return $this->db->get('master_jenis_air');
+	}
 }
