@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 22, 2020 at 07:44 PM
+-- Generation Time: Oct 25, 2020 at 05:47 PM
 -- Server version: 10.4.6-MariaDB
 -- PHP Version: 7.3.9
 
@@ -98,54 +98,8 @@ INSERT INTO `data_latih` (`id_data_latih`, `ph`, `tds`, `th`, `fe`, `mn`, `so4`,
 (51, 7.1, 320, 80, 0.01, 0.003, 23, 0, 1),
 (52, 7.7, 136, 50, 0.01, 0.003, 12, 0, 1),
 (53, 8.2, 320, 37.6, 0.02, 0.04, 2.24, 2, 1),
-(174, 7, 476, 90, 1, 0.2, 56, 2, 2);
-
--- --------------------------------------------------------
-
---
--- Table structure for table `data_percobaan`
---
-
-CREATE TABLE `data_percobaan` (
-  `id_hasil_percobaan` int(11) NOT NULL,
-  `id_percobaan` int(11) NOT NULL,
-  `id_klasifikasi` int(11) NOT NULL,
-  `bobot` float NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `data_rule_klasifikasi_air`
---
-
-CREATE TABLE `data_rule_klasifikasi_air` (
-  `id_rule` int(11) NOT NULL,
-  `id_air` int(11) NOT NULL,
-  `id_klasifikasi` int(11) NOT NULL,
-  `bobot` float NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-
---
--- Dumping data for table `data_rule_klasifikasi_air`
---
-
-INSERT INTO `data_rule_klasifikasi_air` (`id_rule`, `id_air`, `id_klasifikasi`, `bobot`) VALUES
-(1, 1, 1, 9),
-(2, 1, 3, 1),
-(3, 1, 4, 1500),
-(4, 1, 5, 500),
-(5, 1, 6, 1),
-(6, 1, 7, 0.5),
-(7, 1, 8, 400),
-(8, 1, 9, 10),
-(9, 2, 1, 8.5),
-(10, 2, 3, 1000),
-(11, 2, 4, 500),
-(12, 2, 5, 0.3),
-(13, 2, 6, 0.1),
-(14, 2, 7, 400),
-(15, 2, 8, 0);
+(174, 7, 476, 90, 1, 0.2, 56, 2, 2),
+(175, 7.7, 256, 289, 1, 0.2, 179, 135, 3);
 
 -- --------------------------------------------------------
 
@@ -194,18 +148,6 @@ INSERT INTO `master_klasifikasi_air` (`id_klasifikasi`, `nama_klasifikasi`) VALU
 -- --------------------------------------------------------
 
 --
--- Table structure for table `master_percobaan`
---
-
-CREATE TABLE `master_percobaan` (
-  `id_percobaan` int(11) NOT NULL,
-  `id_user` int(11) NOT NULL,
-  `date` datetime NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-
--- --------------------------------------------------------
-
---
 -- Table structure for table `master_user`
 --
 
@@ -213,7 +155,7 @@ CREATE TABLE `master_user` (
   `id_user` int(11) NOT NULL,
   `username` varchar(30) NOT NULL,
   `password` varchar(50) NOT NULL,
-  `user_class` enum('admin','supervisor','penguji') DEFAULT NULL
+  `user_class` enum('admin','penguji') DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
@@ -235,22 +177,6 @@ ALTER TABLE `data_latih`
   ADD PRIMARY KEY (`id_data_latih`);
 
 --
--- Indexes for table `data_percobaan`
---
-ALTER TABLE `data_percobaan`
-  ADD PRIMARY KEY (`id_hasil_percobaan`),
-  ADD KEY `id_percobaan` (`id_percobaan`),
-  ADD KEY `id_klasifikasi` (`id_klasifikasi`);
-
---
--- Indexes for table `data_rule_klasifikasi_air`
---
-ALTER TABLE `data_rule_klasifikasi_air`
-  ADD PRIMARY KEY (`id_rule`),
-  ADD KEY `data_rule_klasifikasi_air_ibfk_1` (`id_air`),
-  ADD KEY `data_rule_klasifikasi_air_ibfk_2` (`id_klasifikasi`);
-
---
 -- Indexes for table `master_jenis_air`
 --
 ALTER TABLE `master_jenis_air`
@@ -261,12 +187,6 @@ ALTER TABLE `master_jenis_air`
 --
 ALTER TABLE `master_klasifikasi_air`
   ADD PRIMARY KEY (`id_klasifikasi`);
-
---
--- Indexes for table `master_percobaan`
---
-ALTER TABLE `master_percobaan`
-  ADD PRIMARY KEY (`id_percobaan`);
 
 --
 -- Indexes for table `master_user`
@@ -282,19 +202,7 @@ ALTER TABLE `master_user`
 -- AUTO_INCREMENT for table `data_latih`
 --
 ALTER TABLE `data_latih`
-  MODIFY `id_data_latih` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=175;
-
---
--- AUTO_INCREMENT for table `data_percobaan`
---
-ALTER TABLE `data_percobaan`
-  MODIFY `id_hasil_percobaan` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `data_rule_klasifikasi_air`
---
-ALTER TABLE `data_rule_klasifikasi_air`
-  MODIFY `id_rule` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `id_data_latih` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=181;
 
 --
 -- AUTO_INCREMENT for table `master_jenis_air`
@@ -309,34 +217,10 @@ ALTER TABLE `master_klasifikasi_air`
   MODIFY `id_klasifikasi` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
--- AUTO_INCREMENT for table `master_percobaan`
---
-ALTER TABLE `master_percobaan`
-  MODIFY `id_percobaan` int(11) NOT NULL AUTO_INCREMENT;
-
---
 -- AUTO_INCREMENT for table `master_user`
 --
 ALTER TABLE `master_user`
-  MODIFY `id_user` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
-
---
--- Constraints for dumped tables
---
-
---
--- Constraints for table `data_percobaan`
---
-ALTER TABLE `data_percobaan`
-  ADD CONSTRAINT `data_percobaan_ibfk_1` FOREIGN KEY (`id_percobaan`) REFERENCES `master_percobaan` (`id_percobaan`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `data_percobaan_ibfk_2` FOREIGN KEY (`id_klasifikasi`) REFERENCES `master_klasifikasi_air` (`id_klasifikasi`);
-
---
--- Constraints for table `data_rule_klasifikasi_air`
---
-ALTER TABLE `data_rule_klasifikasi_air`
-  ADD CONSTRAINT `data_rule_klasifikasi_air_ibfk_1` FOREIGN KEY (`id_air`) REFERENCES `master_jenis_air` (`id_jenis`),
-  ADD CONSTRAINT `data_rule_klasifikasi_air_ibfk_2` FOREIGN KEY (`id_klasifikasi`) REFERENCES `master_klasifikasi_air` (`id_klasifikasi`);
+  MODIFY `id_user` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
