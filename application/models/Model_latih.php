@@ -147,6 +147,11 @@ class Model_latih extends CI_Model{
         }
     }
 
+    public function delete($id_data_latih)
+    {
+        return $this->db->delete("data_latih", array('id_data_latih' => $id_data_latih), 1);
+    }
+
     public function insert_data($data)
     {
         $query = $this->db->insert("data_latih", $data);
