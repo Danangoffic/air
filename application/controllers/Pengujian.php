@@ -56,7 +56,16 @@ class Pengujian extends CI_Controller
 		}
 		$klasifikasi = new Model_klasifikasi();
 		$data_klasifikasi = $klasifikasi->get_all();
-		$page = array('page' => 'index_pengujian', 'script' => null, 'title' => 'Pengujian', 'data_klasifikasi' => $data_klasifikasi, 'act' => 'Pengujian');
+		$input_user = array();
+		if($this->session->has_userdata('input_user')){
+			$input_user = $this->session->userdata("input_user");
+		}else{
+			foreach ($data_klasifikasi->result() as $key) {
+			$new = strtolower($key->nama_klasifikasi);
+			$input_user[$new] = 0;
+			}
+		}
+		$page = array('page' => 'index_pengujian', 'script' => null, 'title' => 'Pengujian', 'data_klasifikasi' => $data_klasifikasi, 'act' => 'Pengujian', 'input_user' =>$input_user);
 		$this->load->view('templates/layout', $page);
 	}
 
@@ -180,6 +189,7 @@ class Pengujian extends CI_Controller
 			"tc" => $tc,
 			"target" => $target
 		);
+		$this->session->set_userdata('input_user', $DataPengujianUser);
 		return $DataPengujianUser;
 	}
 

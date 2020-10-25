@@ -28,7 +28,7 @@
                                 <a href="javascript:;" class="dropdown-toggle" data-toggle="dropdown" data-hover="dropdown" data-close-others="true">
                                     <!-- <span class="fa fa-user img-circle"></span> -->
                                     <img alt="" class="img-circle" src="<?= base_url() ?>/assets/layouts/layout3/img/avatar9.jpg">
-                                    <span class="username username-hide-mobile"><?=ucwords($this->session->username)?></span>
+                                    <span class="username username-hide-mobile"><?= ucwords($this->session->username) ?></span>
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-default">
                                     <li>
@@ -87,6 +87,11 @@
                             <?php
                             if ($this->session->userdata("user_class") == "admin") {
                             ?>
+                                <li>
+                                    <a href="<?= base_url('Latih') ?>" class="nav-link">
+                                        <i class="fa fa-eyedropper"></i> Data Latih
+                                    </a>
+                                </li>
                                 <li>
                                     <a href="<?= base_url('air') ?>" class="nav-link">
                                         <i class="fa fa-eyedropper"></i> Data Jenis Air
