@@ -134,8 +134,8 @@ class Pengujian extends CI_Controller
 			'kelas' => $PengujianLVQ2['data'][0]['target'],
 			'hasil_pengujian' => $PengujianLVQ2
 		);
-		echo "<p> END HASIL : " . json_encode($hasil_perhitungan) . "<p>";
-		exit();
+		// echo "<p> END HASIL : " . json_encode($hasil_perhitungan) . "<p>";
+		// exit();
 		$data_page = array('page' => 'hasil_pengujian', 'script' => null, 'title' => 'Hasil Pengujian', 'hasil' => $hasil_perhitungan, 'act' => 'Pengujian', 'data_klasifikasi' => $this->klasifikasi->get_all());
 		$this->load->view("templates/layout", $data_page);
 	}
