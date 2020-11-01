@@ -46,7 +46,7 @@
                                                 <div class="col-sm-6">
                                                     <table class="table table-bordered table-hover table-striped">
                                                         <thead>
-                                                            <tr class="active">
+                                                            <tr class="success">
                                                                 <th width="50%">Variabel Input</th>
                                                                 <th width="50%">Nilai</th>
                                                             </tr>
@@ -59,10 +59,6 @@
                                                             <tr>
                                                                 <td>Epoch :</td>
                                                                 <td><?= $this->input->post("epoch"); ?></td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td>Target :</td>
-                                                                <td><?= $this->input->post("target"); ?></td>
                                                             </tr>
                                                             <tr>
                                                                 <td>Window :</td>
@@ -85,9 +81,9 @@
                                                 </div>
                                                 <div class="col-sm-6">
                                                     <?php $Target = $hasil['kelas']; ?>
-                                                    <table class="table table-bordered table-striped table-hover">
+                                                    <table class="table table-bordered table-striped">
                                                         <thead>
-                                                            <tr class="success">
+                                                            <tr class="bg-blue font-white">
                                                                 <th>Variabel Hasil Learning Vector Quantization 2</th>
                                                                 <th>Hasil</th>
                                                             </tr>
@@ -103,21 +99,17 @@
                                                             </tr>
                                                             <tr>
                                                                 <td>
-                                                                    Total Data Yang Benar
+                                                                    Total Data Yang Cocok
                                                                 </td>
                                                                 <td>
                                                                     <?= $hasil['TotalDataSesuai']; ?>
                                                                 </td>
                                                             </tr>
-                                                            <tr>
+                                                            <tr class="bg-blue-chambray font-white">
                                                                 <td> Akurasi </td>
                                                                 <td> <?= $hasil['percentage'] . '%' ?> </td>
                                                             </tr>
-                                                            <tr>
-                                                                <td> Target </td>
-                                                                <td> <?= $Target ?> </td>
-                                                            </tr>
-                                                            <tr>
+                                                            <tr class="bg-blue-chambray font-white">
                                                                 <?php $JenisAir = $this->air->getByIdJenis($Target)->row(); ?>
                                                                 <td> Jenis Air </td>
                                                                 <td> <?= $JenisAir->kategori_jenis; ?> </td>
