@@ -114,17 +114,6 @@
                                                         }
                                                         ?>
                                                     </div>
-
-                                                    <div class="portlet-body form">
-                                                        <div class="form-body">
-                                                            <div class="fomr-group">
-                                                                <label class="control-label col-sm-6" for="target">Target</label>
-                                                                <div class="col-sm-6">
-                                                                    <input class="form-control" type="number" min="1" name="target" required="" id="target" value="1" max="3" step="1">
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
                                                     <div class="portlet-body form">
                                                         <div class="col-md-12">
                                                             <div class="form-body">

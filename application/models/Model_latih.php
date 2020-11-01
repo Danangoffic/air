@@ -70,12 +70,12 @@ class Model_latih extends CI_Model{
         return $this->db->get();
     }
 
-    public function getDataUjiUser($limit=6)
+    public function getDataUjiUser()
     {
-        $this->db->limit($limit)
-                ->select('data_latih.*')
-                ->order_by('id_data_latih', 'DESC')
-                ->from("data_latih");
+        $this->db->select('data_latih.*')
+                ->order_by('target', 'ASC')
+                ->from("data_latih")
+                ->group_by("target");
         return $this->db->get();
     }
 
