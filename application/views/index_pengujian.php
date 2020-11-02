@@ -73,7 +73,7 @@
                                                             <div class="form-group">
                                                                 <label class="control-label col-sm-6" for="epoch">Epoch</label>
                                                                 <div class="col-sm-6">
-                                                                    <input class="form-control" type="number" min="1" name="epoch" required="" id="epoch" value="1" step="1">
+                                                                    <input class="form-control" type="number" min="1" name="epoch" required="" id="epoch" value="1" step="1" max="1000">
                                                                 </div>
                                                             </div>
                                                         </div>

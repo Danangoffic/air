@@ -147,6 +147,12 @@ class Model_latih extends CI_Model{
         }
     }
 
+    public function getByIdLatih($id_data_latih)
+    {
+        # code...
+        return $this->db->get_where("data_latih", array('id_data_latih' => $id_data_latih), 1);
+    }
+
     public function delete($id_data_latih)
     {
         return $this->db->delete("data_latih", array('id_data_latih' => $id_data_latih), 1);
@@ -156,6 +162,12 @@ class Model_latih extends CI_Model{
     {
         $query = $this->db->insert("data_latih", $data);
         return $query;
+    }
+
+    public function update($data, $id_data_latih)
+    {
+        $this->db->where("id_data_latih", $id_data_latih);
+        return $this->db->update("data_latih", $data);
     }
 
     public function id_data_latih()
