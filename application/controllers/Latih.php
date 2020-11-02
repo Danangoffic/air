@@ -62,4 +62,31 @@ class Latih extends CI_Controller
             redirect(base_url('Latih/add'));
         }
     }
+
+    public function edit($id_latih)
+    {
+        # code...
+        $data_klasifikasi = $this->klasifikasi->get_all();
+        $detail = $this->Model_latih->getByIdLatih($id_latih);
+        $page = array('page'=>'edit_latih', 'title'=>"Uabh Data latih", 'script'=>null, 'data_klasifikasi' => $data_klasifikasi, 'detail' => $detail->row());
+		$this->load->view('templates/layout', $page);
+    }
+
+    public function update()
+    {
+        # code...
+        $id_latih = $this->input->post("id_data_latih");
+        $data = $this->Model_latih->getByIdLatih($id_latih);
+        if($data->num_rows() > 0 ){
+            $updateArray = $this->input->post();
+            $update = $this->Model_latih->update($updateArray, $id_latih);
+            if($update){
+                $this->session->set_flashdata("success", "Sukses Ubah data latih");
+                redirect(base_url('Latih'));
+            }else{
+                $this->session->set_flashdata("error", "Gagal Ubah data latih");
+                redirect(base_url('Latih/edit/'.$id_latih));
+            }
+        }
+    }
 }

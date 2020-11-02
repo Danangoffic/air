@@ -92,6 +92,7 @@
                                                                 ?>
                                                                 <td class="text-center"><?=$latih->target;?></td>
                                                                 <td class="text-center">
+                                                                    <a href="<?=base_url('latih/edit/') . $latih->id_data_latih; ?>" class="btn btn-info"><i class="fa fa-edit fa-fw"></i> Edit</a>
                                                                     <a class="btn btn-danger" href="<?= base_url('latih/delete/') . $latih->id_data_latih ?>"><i class="fa fa-trash fa-fw"></i> Delete</a>
                                                                 </td>
                                                             </tr>
