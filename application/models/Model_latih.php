@@ -73,8 +73,32 @@ class Model_latih extends CI_Model{
     public function getDataUjiUser()
     {
         $this->db->select('data_latih.*')
+                ->order_by('id_data_latih', 'ASC')
+                ->from("data_latih")
+                ->limit(3);
+                // ->group_by("target");
+        return $this->db->get();
+    }
+
+    public function getDataUji(array $id_data_bobot)
+    {
+        # code...
+        $this->db->select('data_latih.*')
+                ->order_by('id_data_latih', 'ASC')
+                ->from("data_latih")
+                ->where_not_in("id_data_latih", $id_data_bobot)
+                ->limit(15);
+                // ->group_by("target");
+        return $this->db->get();
+    }
+
+    public function getDataUjiUserNotInWhere($id_bobot=array())
+    {
+        $this->db->select('data_latih.*')
                 ->order_by('target', 'ASC')
                 ->from("data_latih")
+                ->where_not_in($id_bobot)
+                // ->limit(9);
                 ->group_by("target");
         return $this->db->get();
     }
