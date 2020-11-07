@@ -19,7 +19,7 @@
                         <!-- BEGIN PAGE BREADCRUMBS -->
                         <ul class="page-breadcrumb breadcrumb">
                             <li>
-                                <span>Pengujian Air</span>
+                                <span>Hasil Pengujian Air</span>
                             </li>
                         </ul>
                         <!-- END PAGE BREADCRUMBS -->
@@ -41,6 +41,9 @@
                                     <?php endif; ?>
                                     <!-- BEGIN SAMPLE TABLE PORTLET-->
                                     <div class="portlet box green">
+                                        <div class="portlet-title">
+                                            <h4>Hasil Uji Kelayakan Air</h4>
+                                        </div>
                                         <div class="portlet-body flip-scroll">
                                             <div class="row">
                                                 <div class="col-sm-6">
@@ -98,8 +101,12 @@
                                                                 </td>
                                                             </tr>
                                                             <tr>
+                                                                <td>Total Data Uji</td>
+                                                                <td><?=$hasil['TotalDataUji']?></td>
+                                                            </tr>
+                                                            <tr>
                                                                 <td>
-                                                                    Total Data Yang Cocok
+                                                                    Total Data Yang Benar
                                                                 </td>
                                                                 <td>
                                                                     <?= $hasil['TotalDataSesuai']; ?>
