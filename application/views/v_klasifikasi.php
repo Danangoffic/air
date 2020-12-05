@@ -64,22 +64,26 @@
 												<thead class="flip-content">
 													<tr>
 														<th width="5%" class="text-center"> No </th>
-														<th> Kalsifikasi Air </th>
-														<!-- <th class="text-center"> Aksi </th> -->
+														<th> Kandungan Air </th>
+														<th class="text-center"> Aksi </th>
 													</tr>
 												</thead>
 												<tbody>
 													<?php if ($data->num_rows() > 0) :
 														$no = 1;
-														foreach ($data->result() as $jenis_air) {
+														foreach ($data->result() as $kandungan_air) {
+															$kandungan = $kandungan_air->nama_klasifikasi;
 													?>
 															<tr>
 																<td class="text-center"><?= $no; ?></td>
-																<td><?= $jenis_air->nama_klasifikasi; ?></td>
-																<!-- <td class="text-center"> -->
-																<!-- <a class="btn btn-info" href="<?= base_url('klasifikasi/edit/') . $jenis_air->id_klasifikasi ?>"><i class="fa fa-edit"></i> Edit</a> -->
-																<!-- <a class="btn btn-danger" href="<?= base_url('klasifikasi/delete/') . $jenis_air->id_klasifikasi ?>"><i class="fa fa-trash fa-fw"></i> Delete</a> -->
-																<!-- </td> -->
+																<td><?= $kandungan; ?></td>
+																<td class="text-center">
+																	<?php if ($kandungan == "PH" || $kandungan == "TDS" || $kandungan == "TH" || $kandungan == "Fe" || $kandungan == "Mn" || $kandungan == "SO4" || $kandungan == "TC") : ?>
+																	<?php else : ?>
+																		<a class="btn btn-info" href="<?= base_url('klasifikasi/edit/') . $kandungan_air->id_klasifikasi ?>"><i class="fa fa-edit"></i> Edit</a>
+																		<a class="btn btn-danger" href="<?= base_url('klasifikasi/delete/') . $kandungan_air->id_klasifikasi ?>"><i class="fa fa-trash fa-fw"></i> Delete</a>
+																	<?php endif; ?>
+																</td>
 															</tr>
 														<?php
 															$no++;

@@ -56,4 +56,9 @@ class Model_klasifikasi extends CI_Model
 			return abs($x - $y) ** 2;
 		}, $a, $b)) ** (1 / 2);
 	}
+
+	public function delete($id)
+	{
+		return $this->db->delete('master_klasifikasi_air', ['id_klasifikasi' => $id], 1);
+	}
 }
