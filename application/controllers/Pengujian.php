@@ -84,7 +84,7 @@ class Pengujian extends CI_Controller
 		//GET INPUT VALUE
 		$DataPengujianUser = $this->setPengujianValue();
 
-
+		$NORMALISASI_INPUT = $this->getInputUser($DataPengujianUser);
 		$resultCalculation = array();
 		$BobotAwal = $this->getBobotAwalNormalized();
 		$id_bobot = $BobotAwal['id_bobot'];
@@ -120,9 +120,10 @@ class Pengujian extends CI_Controller
 			}
 			// PENGURANGAN LEARNING RATE		
 			$learningRate = $this->getNewLearningRate($learningRate, $deca);
-			$indexEpoch++;
+			// $indexEpoch++;
 		}
 
+		// echo ""
 		$resultCalculation = array();
 
 
@@ -130,11 +131,11 @@ class Pengujian extends CI_Controller
 		$PengujianLVQ2 = $this->euclidean_distance_pengujian($dataUji['x'], $BobotTeroptimalisasi);
 		// echo "Hasil Pengujian : " . json_encode($PengujianLVQ2, JSON_PRETTY_PRINT);
 		// exit();
-		$KlasifikasiLVQ2 = $this->euclidean_klasifikasi($DataPengujianUser, $BobotTeroptimalisasi);
+		$KlasifikasiLVQ2 = $this->euclidean_klasifikasi($NORMALISASI_INPUT['x'][0], $BobotTeroptimalisasi);
 		$total_data_uji = $PengujianLVQ2['total_data_uji'];
 		$total_benar = $PengujianLVQ2['total_data_uji_benar'];
 		$total_data_latih = count($dataLatihan);
-		$akurasi_data = floatval (($total_benar/$total_data_latih) * 100);
+		$akurasi_data = floatval(($total_benar / $total_data_latih) * 100);
 		$hasil_perhitungan = array(
 			'learning_rate' => $learningRate,
 			'window' => $window,
@@ -178,7 +179,7 @@ class Pengujian extends CI_Controller
 
 	protected function getBobotDataLatih($id_bobot_array)
 	{
-		$data_latih = $this->Model_latih->getDataLatih($id_bobot_array, null);
+		$data_latih = $this->Model_latih->getDataLatih($id_bobot_array, 60);
 		// echo "<p> query data latih : " . $this->db->last_query() . "</p>";
 		$id_latih_array = array();
 		foreach ($data_latih->result() as $result_bobot_2) {
@@ -215,6 +216,21 @@ class Pengujian extends CI_Controller
 		$result_data = $data->result_array();
 		$normalized_data = $this->getNormalizeData($result_data);
 		return array('x' => $normalized_data, 'used_id' => $used_id);
+	}
+
+	protected function getInputUser($userInput)
+	{
+		$insert = $this->Model_latih->insert($userInput);
+		if ($insert) {
+			// $id = intval($this->db->insert_id());
+			$data = $this->Model_latih->findAll();
+			$id = intval($data->row()->id_data_latih);
+			$result_data = $data->result_array();
+			$normalize_data = $this->getNormalizeData($result_data);
+			$this->Model_latih->delete($id);
+			$this->Model_latih->returnAutoIncrement($id);
+			return array('x' => $normalize_data);
+		}
 	}
 
 	protected function getNormalizeData($data)
@@ -300,7 +316,7 @@ class Pengujian extends CI_Controller
 			}
 			// SORTING UNTUK DAPATKAN WINNER
 			$BobotAwal = $this->array_sort($BobotAwal, "hasil", SORT_ASC);
-			
+
 			// UPDATE BOBOT AWAL UNTUK OPMILAISASI NILAI
 			$update = $this->update_pengujian($BobotAwal, $i, $learningRate, $window, $total_benar);
 			$BobotAwal = $update['w'];
@@ -362,7 +378,7 @@ class Pengujian extends CI_Controller
 			# code...
 			$indexX = 0;
 			$PengujianBobotOptimal = array();
-			
+
 			foreach ($hasilBobotPelatihan as $i) {
 
 				// $j = $pengujian;
@@ -432,11 +448,11 @@ class Pengujian extends CI_Controller
 				$pow = $this->get_in_pow($awal, $latih);
 				array_push($untuk_sum, $pow);
 			}
-			
+
 			$x['target'] =  $i['target'];
 			$sum_all = array_sum($untuk_sum);
 			$sqrt = round(sqrt($sum_all), 3);
-			
+
 			$i['hasil'] = $sqrt;
 			$i['data_uji'] = $j;
 			$KlasifikasiInput[$indexX] = $i;
